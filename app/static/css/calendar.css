@@ -1,0 +1,12 @@
+ #selectedDatesList {
+            margin-top: 20px;
+            list-style-type: none;
+            padding: 0;
+        }
+        .date-item {
+            margin: 5px 0;
+        }
+        .remove-date {
+            color: red;
+            cursor: pointer;
+        }

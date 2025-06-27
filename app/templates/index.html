@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="/static/css/index.css">
+{% endblock %}
+
+{% block content %}
+<header>
+    <img class="header-image"
+         src="/static/img/photo.jpg"
+         alt="Шиномонтаж Tip-Top" width="1500" height="1000">
+    <div class="header-content">
+        <svg class="scissors" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M30,40 L70,80 M30,80 L70,40 M50,60 L90,20 M50,60 L10,20"/>
+        </svg>
+        <h1>{{ title }}</h1>
+    </div>
+</header>
+<main>
+    <h2>Здравствуйте! </h2>
+    <div class="divider"></div>
+    <p>Добро пожаловать в наш шиномонтаж- <span class="highlight">Tip-Top</span> Мы рады вас видеть и готовы быстро и
+        качественно выполнить замену, балансировку и ремонт шин.
+        Ваш комфорт и безопасность — наш приоритет! Обратитесь к нам,
+        и мы позаботимся о вашем автомобиле.</p>
+
+    <!-- Кнопка для записи -->
+    <a id="book-button" class="btn">Записаться сейчас</a>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/index.js"></script>
+{% endblock %}
