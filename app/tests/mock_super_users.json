@@ -1,0 +1,18 @@
+[
+  {
+    "login_user": "ilmir112",
+    "name_user": "Ильмир",
+    "surname_user": "Зуфаров",
+    "second_name": "Мияссарович",
+    "password": "123456",
+    "access_level": "admin"
+  },
+  {
+   "login_user": "ilmir1121",
+    "name_user": "Ильмир1",
+    "surname_user": "Зуфаров1",
+    "second_name": "Мияссарович1",
+    "password": "1234561",
+    "access_level": "user"
+  }
+]

@@ -10,94 +10,154 @@
 {% endblock %}
 
 {% block content %}
-<main>
-    <h1>Выберите рабочие дни</h1>
-    <input type="text" id="datePicker" placeholder="Выберите даты" multiple>
-    <button id="addAndRemove">Добавить выбранные даты и удалить их из базы</button>
+    <main>
+        <h1>Выберите рабочие дни</h1>
+        <input type="text" id="datePicker" placeholder="Выберите даты" multiple>
+        <button id="submitDates">Добавить рабочие дни</button>
 
-    <h2>Выбранные рабочие дни:</h2>
-    <ul id="selectedDatesList"></ul>
-</main>
+        <h2>Выбранные рабочие дни:</h2>
+        <ul id="selectedDatesList"></ul>
+    </main>
 
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script>
-    // Инициализация flatpickr
-    const datePicker = flatpickr("#datePicker", {
-        mode: "multiple",
-        dateFormat: "Y-m-d",
-        onChange: function (selectedDates) {
-            updateSelectedDatesList(selectedDates);
-        }
-    });
-
-    // Обновление списка выбранных дат
-    function updateSelectedDatesList(dates) {
-        const list = document.getElementById("selectedDatesList");
-        list.innerHTML = "";
-
-        dates.forEach(date => {
-            const li = document.createElement("li");
-            li.classList.add("date-item");
-            // Отображаем дату на день меньше
-            const displayDate = new Date(date);
-            displayDate.setDate(displayDate.getDate() - 1);
-            li.textContent = displayDate.toISOString().split('T')[0];
-
-            // Можно добавить кнопку удаления для каждого элемента, если нужно
-            // Но в этом случае удаление делается по выбранным датам при нажатии на кнопку
-            list.appendChild(li);
-        });
-    }
-
-    // Обработка клика по кнопке — добавление и удаление
-document.getElementById("addAndRemove").addEventListener("click", async () => {
-    const selectedDates = datePicker.selectedDates;
-    if (selectedDates.length === 0) {
-        alert("Пожалуйста, выберите хотя бы одну дату.");
-        return;
-    }
-
-    for (const date of selectedDates) {
-        const formattedDate = date.toISOString().split('T')[0];
-        try {
-            const response = await fetch("/remove", {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formattedDate), // Передаем только строку
-            });
-            if (response.ok) {
-                console.log(`Удален день ${formattedDate}`);
-            } else {
-                console.error(`Ошибка при удалении ${formattedDate}`);
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Инициализация flatpickr
+        const datePicker = flatpickr("#datePicker", {
+            mode: "multiple",
+            dateFormat: "Y-m-d",
+            onChange: function (selectedDates) {
+                updateSelectedDatesList(selectedDates);
             }
-        } catch (error) {
-            console.error(`Ошибка сети при удалении ${formattedDate}:`, error);
+        });
+
+        // Функция для отображения выбранных дат
+        function updateSelectedDatesList(dates) {
+            const list = document.getElementById("selectedDatesList");
+            list.innerHTML = ""; // Очистить список
+
+            // Перед отображением сортируем список дат
+            dates.sort((a, b) => new Date(a) - new Date(b));
+
+            dates.forEach(date => {
+                const li = document.createElement("li");
+                li.classList.add("date-item");
+
+                const displayDate = new Date(date);
+                displayDate.setDate(displayDate.getDate());
+                li.textContent = displayDate.toISOString().split('T')[0];
+
+                // Кнопка для удаления даты из списка
+                const removeBtn = document.createElement("span");
+                removeBtn.textContent = " ×";
+                removeBtn.classList.add("remove-date");
+                // Назначение обработчика на кнопку
+                removeBtn.onclick = function () {
+                    handleRemoveDate(date);
+                };
+
+                li.appendChild(removeBtn);
+                list.appendChild(li);
+            });
         }
-    }
 
-    // После удаления обновляем список
-    await loadExistingDays();
+        async function removeDate(date) {
+            // Получаем текущие выбранные даты
+            const selectedDates = datePicker.selectedDates;
 
-    // Очищаем выбор
-    datePicker.clear();
-});
-// Загрузка существующих дней при старте
-async function loadExistingDays() {
-    try {
-        const response = await fetch("/day/find_all");
-        const data = await response.json();
-        if (data && Array.isArray(data)) {
-            const dates = data.map(item => new Date(item.date));
-            datePicker.setDate(dates, false);
-            updateSelectedDatesList(dates);
+            // Фильтруем, чтобы исключить удаляемую дату
+            const remainingDates = selectedDates.filter(d => d.toISOString().slice(0, 10) !== date);
+
+            // Обновляем календарь
+            datePicker.setDate(remainingDates, true);
+
+            // Обновляем список отображения (если есть)
+            updateSelectedDatesList(remainingDates);
         }
-    } catch (error) {
-        console.error("Ошибка загрузки данных:", error);
-    }
-}
 
-// Загружаем существующие дни при загрузке страницы
-loadExistingDays();
+        async function handleRemoveDate(date) {
+            await deleteWorkingDay(date); // Удаление из базы
+            // Удаляем дату из picker
+            const remainingDates = datePicker.selectedDates.filter(d => d.toISOString().slice(0, 10) !== date);
+            datePicker.setDate(remainingDates, true);
+            // Обновляем список отображения
+            updateSelectedDatesList(remainingDates);
+        }
 
-</script>
+        // Загрузка существующих рабочих дней при старте
+        async function loadExistingDays() {
+            try {
+                const response = await fetch("/day/find_all");
+                const data = await response.json();
+                if (data && Array.isArray(data)) {
+                    // Предполагается, что сервер возвращает массив объектов с полем date в формате 'YYYY-MM-DD'
+                    const dates = data.map(item => new Date(item.date));
+                    // Устанавливаем эти даты в picker без вызова onChange
+                    datePicker.setDate(dates, false);
+                    updateSelectedDatesList(dates);
+                }
+            } catch (error) {
+                console.error("Ошибка загрузки данных:", error);
+            }
+        }
+
+        // Добавление новых дат в базу данных
+        async function addWorkingDays(dates) {
+            const payload = dates.map(date => ({date: date.toISOString().split('T')[0]}));
+            try {
+                const response = await fetch("/day/add", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify(payload),
+                });
+                const result = await response.json();
+                alert(result.message || "Даты успешно добавлены");
+            } catch (error) {
+                console.error("Ошибка при добавлении дат:", error);
+            }
+        }
+
+        // Удаление рабочего дня из базы данных
+        async function deleteWorkingDay(date) {
+            try {
+                await fetch(`/day/remove?working_day=${date.toISOString().split('T')[0]}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
+            } catch (error) {
+                console.error("Ошибка при удалении дня:", error);
+            }
+        }
+
+        // Обработчик кнопки добавления дат
+        document.getElementById("submitDates").addEventListener("click", async () => {
+            const selectedDates = datePicker.selectedDates;
+            try {
+                const response = await fetch("/day/find_all");
+                const data = await response.json();
+                if (data && Array.isArray(data)) {
+                    // Предполагается, что сервер возвращает массив объектов с полем date в формате 'YYYY-MM-DD'
+                    const dates = data.map(item => new Date(item.date));
+                }
+            } catch (error) {
+                console.error("Ошибка загрузки данных:", error);
+            }
+
+
+            if (selectedDates.length > 0) {
+                await addWorkingDays(selectedDates);
+                alert("Даты успешно добавлены");
+                await loadExistingDays();  // Обновляем список после добавления
+                {#datePicker.clear(); // Очистить выбор после отправки#}
+                {#updateSelectedDatesList([]);#}
+            } else {
+                alert("Пожалуйста, выберите хотя бы одну дату.");
+            }
+        });
+
+        // Загружаем существующие дни при загрузке страницы
+        loadExistingDays();
+
+    </script>
 {% endblock %}

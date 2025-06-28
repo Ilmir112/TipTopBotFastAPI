@@ -41,7 +41,7 @@ async def update_master_data(
     try:
         if master_id:
             result = await  MasterDAO.update(
-                {"_id": master_id},
+                {"id": master_id},
                 {"master_name": master_name}
             )
             return result

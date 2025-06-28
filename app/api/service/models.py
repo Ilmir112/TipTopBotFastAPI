@@ -16,5 +16,8 @@ class Service(Base):
     time_work: Mapped[timedelta] = mapped_column(Interval, nullable=False)
 
     # Связь с заявками (одна услуга может быть частью нескольких заявок)
-    applications: Mapped[list["Application"]] = relationship(back_populates="service")
-
+    applications: Mapped[list["Application"]] = relationship(
+        "Application",
+        back_populates="service",
+        cascade="all, delete"
+    )

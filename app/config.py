@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import ValidationError
+from pydantic import ValidationError, ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -59,9 +59,9 @@ class Settings(BaseSettings):
     TOKEN: str
     CHAT_ID: str
 
-    class Config:
-        # env_file = ".env"
-        env_file = '../.env'
+    model_config = ConfigDict(env_file = ".env")
+    # model_config = ConfigDict(env_file = '../.env')
+
 
 
 try:

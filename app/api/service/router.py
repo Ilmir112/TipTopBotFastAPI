@@ -21,37 +21,37 @@ router = APIRouter(prefix='/service', tags=['Услуги'])
 @router.get("/find_by_id")
 async def find_service_by_id(
         service_id: int, user: Users = Depends(get_current_user)):
-    result = await ServiceDAO.find_one_or_none(master_id=service_id)
+    result = await ServiceDAO.find_one_or_none(service_id=service_id)
     return result
 
 
 @router.get("/find_all")
-async def find_master_all(user: Users = Depends(get_current_user)):
+async def find_service_all(user: Users = Depends(get_current_user)):
     result = await ServiceDAO.find_all()
     return result
 
 
 @router.put("/update_by_id")
-async def update_master_data(
-        master_name: str,
-        service_id: Service = Depends(find_service_by_id),
+async def update_service_data(service_name: str, time_work: int,
+        service_id: int,
         user: Users = Depends(get_current_user)
 ):
+
     try:
-        if service_id:
-            result = await  ServiceDAO.update(
+
+        result = await ServiceDAO.update(
                 {"service_id": service_id},
-                {"service_name": master_name,
-                 "time_work": master_name}
+                service_name=service_name,
+                time_work=time_work
             )
-            return result
+        return result
     except SQLAlchemyError as db_err:
         msg = f'Database Exception Brigade {db_err}'
-        logging.error(msg, extra={"master_name": master_name}, exc_info=True)
+        logging.error(msg, extra={"service_name": service_name}, exc_info=True)
 
     except Exception as e:
         msg = f'Unexpected error: {str(e)}'
-        logging.error(msg, extra={"master_name": master_name}, exc_info=True)
+        logging.error(msg, extra={"service_name": service_name}, exc_info=True)
 
 
 @router.post("/add")
@@ -59,21 +59,21 @@ async def add_service_data(
         service_data: SService,
         user: Users = Depends(get_current_user)):
     try:
-        service = await ServiceDAO.find_one_or_none(service_name=service_data.master_name)
+        service = await ServiceDAO.find_one_or_none(service_name=service_data.service_name)
         if service is None:
-            result = await ServiceDAO.add(master_name=service_data.master_name,
+            result = await ServiceDAO.add(service_name=service_data.service_name,
                                           time_work=service_data.time_work)
             return result
     except SQLAlchemyError as db_err:
         msg = f'Database Exception Brigade {db_err}'
-        logging.error(msg, extra={"service_data": service_data.master_name}, exc_info=True)
+        logging.error(msg, extra={"service_data": service_data.service_name}, exc_info=True)
     except Exception as e:
         msg = f'Unexpected error: {str(e)}'
-        logging.error(msg, extra={"service_data": service_data.master_name}, exc_info=True)
+        logging.error(msg, extra={"service_data": service_data.service_name}, exc_info=True)
 
 @router.delete("/remove")
 async def remove_service_data(service_id: int, user: Users = Depends(get_current_user)):
-    result = ServiceDAO.delete(service_id=service_id)
+    result = await ServiceDAO.delete(service_id=service_id)
     return result
     
 

@@ -2,7 +2,7 @@ import logging
 from datetime import date, datetime
 from http.client import HTTPException
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
@@ -22,6 +22,7 @@ router = APIRouter(
     tags=['Данные по рабочим дням'])
 
 
+
 @router.get("/find_by_id")
 async def find_working_by_id(
         day_id: int):
@@ -34,20 +35,21 @@ async def find_working_by_date(
         working_day: date):
     result = await WorkingDayDAO.find_one_or_none(working_day=working_day)
     if result:
+        print(f'рабочие дни{result}')
         return result
+
 
 @router.get("/find_all")
 async def find_working_day_all():
-
     result = await WorkingDayDAO.find_all()
+
     if result:
         return result
-    raise HTTPException(status_code=404)
 
 
 @router.post("/add")
 async def add_working_day(request: Request,
-        working_days: list[WorkingDaysInput]):
+                          working_days: list[WorkingDaysInput]):
     working_day_list = []
     try:
         for day in working_days:
@@ -80,7 +82,7 @@ async def add_working_day(request: Request,
 
 @router.delete("/remove")
 async def remove_working_day_data(
-        working_day: date
+        working_day: date = Query(...)
 ):
     workings_day = await WorkingDayDAO.find_one_or_none(date=working_day)
     if workings_day:

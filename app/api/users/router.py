@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from venv import logger
+from app.logger import logger
 
 from fastapi import APIRouter, Depends
 from fastapi.requests import Request
@@ -34,7 +34,7 @@ async def register_user(user_data: SUsersRegister):
             password=hashed_password,
             access_level=user_data.access_level,
         )
-        logger.info("Users adding", extra={"well_number": user_data.login_user}, exc_info=True)
+        logger.info("Users adding", extra={"TipTop": user_data.login_user}, exc_info=True)
     except Exception as e:
         logger.error('Critical error', extra=e, exc_info=True)
 

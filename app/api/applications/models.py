@@ -1,9 +1,12 @@
 from datetime import timedelta
+from tkinter.constants import CASCADE
 from wsgiref.validate import validator
 
 from pydantic import model_validator, field_validator, ConfigDict
 from sqlalchemy import String, BigInteger, Integer, Date, Time, ForeignKey, Enum, Interval
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app.api.users.models import Users
 from app.database import Base
 import enum
 
@@ -22,6 +25,6 @@ class Application(Base):
     # service_type: Mapped[ServiceEnum] = mapped_column(Enum(ServiceEnum), nullable=False)
     client_name: Mapped[str] = mapped_column(String, nullable=False)  # Имя пользователя
     # Связи с пользователем, мастером и услугой
-    user: Mapped["Users"] = relationship(back_populates="applications")
+    user: Mapped["Users"] = relationship("Users", back_populates="applications")
     # master: Mapped["Master"] = relationship(back_populates="applications")
-    service: Mapped["Service"] = relationship(back_populates="applications")
+    service: Mapped["Service"] = relationship("Service", back_populates="applications")

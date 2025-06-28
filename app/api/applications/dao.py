@@ -13,7 +13,7 @@ from app.database import async_session_maker
 class AppointmentRequest(BaseModel):
     appointment_date: str  # формат 'YYYY-MM-DD'
     appointment_time: str  # формат 'HH:MM'
-    master_id: int
+    # master_id: int
 
 
 
@@ -21,11 +21,10 @@ class ApplicationDAO(BaseDAO):
     model = Application
 
     @classmethod
-    async def get_booked_times(cls, appointment_date: str, master_id: int) -> List[str]:
+    async def get_booked_times(cls, appointment_date: str) -> List[str]:
 
         async with async_session_maker() as session:
-            query = select(cls.model.appointment_time).where(cls.model.appointment_date == appointment_date,
-                                            cls.model.master_id == master_id)
+            query = select(cls.model.appointment_time).where(cls.model.appointment_date == appointment_date)
             result = await session.execute(query)
             return result.scalars().all()
 

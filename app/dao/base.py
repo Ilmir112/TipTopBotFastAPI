@@ -19,7 +19,7 @@ class BaseDAO:
             Экземпляр модели или None, если ничего не найдено.
         """
         async with async_session_maker() as session:
-            query = select(cls.model).filter_by(id=data_id)
+            query = select(cls.model).filter_by(telegram_id=data_id)
             result = await session.execute(query)
             return result.scalar_one_or_none()
 

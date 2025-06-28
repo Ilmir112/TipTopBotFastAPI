@@ -49,7 +49,7 @@ async def get_current_user(token: str = Depends(get_token)):
     if not user_id:
         raise UserAlreadyExistsException
 
-    user = await SuperUsersDAO.find_by_id(int(user_id))
+    user = await SuperUsersDAO.find_one_or_none_by_id(int(user_id))
     if not user:
         raise UserAlreadyExistsException
 

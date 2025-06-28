@@ -15,8 +15,8 @@ from app.api.working_day.router import find_working_day_all
 from app.config import settings
 
 router = APIRouter(prefix='', tags=['Фронтенд'])
-# templates = Jinja2Templates(directory='app/templates')
-templates = Jinja2Templates(directory='templates')
+templates = Jinja2Templates(directory='app/templates')
+# templates = Jinja2Templates(directory='templates')
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -49,6 +49,7 @@ async def read_root(request: Request, user_id: int = None, first_name: str = Non
                  "title": "Запись на шиномонтаж",
                  # "masters": masters,
                  "services": services}
+    print(data_page)
     return templates.TemplateResponse("form.html", data_page)
 
 
@@ -74,7 +75,7 @@ async def read_root(request: Request, admin_id: int = None):
 @router.get("/applications", response_class=HTMLResponse)
 async def read_root(request: Request, user_id: int = None):
     data_page = {"request": request, "access": False, 'title_h1': "Мои записи"}
-    user_check = await UsersDAO.find_one_or_none_by_id(user_id)
+    user_check = await UsersDAO.find_one_or_none(telegram_id=user_id)
 
     if user_id is None or user_check is None:
         data_page['message'] = 'Пользователь по которому нужно отобразить заявки не указан или не найден в базе данных'

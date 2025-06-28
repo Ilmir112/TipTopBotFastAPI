@@ -1,6 +1,21 @@
+// Объявляем переменную для хранения рабочих дней
+let workingDays = [];
+
+// Функция для получения списка рабочих дней с сервера
+async function fetchWorkingDays() {
+    try {
+        const response = await fetch('/day/find_all');
+        if (!response.ok) throw new Error('Ошибка при получении рабочих дней');
+        const data = await response.json();
+        // Предположим, что сервер возвращает массив строк дат
+
+    } catch (error) {
+        console.error(error);
+    }
+}
 // Ваша существующая функция для получения занятых времён
-async function fetchBookedTimes(appointmentDate, masterId) {
-    const response = await fetch(`/api/get_booked_times?appointment_date=${appointmentDate}&master_id=${masterId}`);
+async function fetchBookedTimes(appointmentDate) {
+    const response = await fetch(`/api/get_booked_times?appointment_date=${appointmentDate}`);
     if (!response.ok) {
         throw new Error('Ошибка при получении данных');
     }
@@ -11,13 +26,11 @@ async function fetchBookedTimes(appointmentDate, masterId) {
 // Функция для обновления доступных времён
 async function updateAvailableTimes() {
     const dateInput = document.getElementById('date');
-    const masterInput = document.getElementById('master'); // предполагается, что есть такое поле
-    const masterId = masterInput && masterInput.value ? parseInt(masterInput.value.split('_')[0], 10) : null;
     const selectedDate = dateInput.value;
-    if (!selectedDate || !masterId) return;
+    if (!selectedDate) return;
 
     try {
-        const bookedTimes = await fetchBookedTimes(selectedDate, masterId);
+        const bookedTimes = await fetchBookedTimes(selectedDate);
         // Обновляем кнопки с временами
         const allTimeButtons = document.querySelectorAll('.time-btn');
 
@@ -37,9 +50,7 @@ async function updateAvailableTimes() {
 
 // Обработчики изменения даты и мастера
 document.getElementById('date').addEventListener('change', updateAvailableTimes);
-if (document.getElementById('master')) {
-    document.getElementById('master').addEventListener('change', updateAvailableTimes);
-}
+
 
 // Вызовем при загрузке страницы, чтобы сразу показать актуальные данные
 window.addEventListener('load', () => {
@@ -190,3 +201,7 @@ document.getElementById('closePopup').addEventListener('click', async function (
         }
     }
 )
+// Вызов функции при загрузке страницы
+window.addEventListener('load', () => {
+    fetchWorkingDays();
+});

@@ -11,18 +11,20 @@ from app.config import settings
 
 router = APIRouter(prefix='/api', tags=['API'])
 
+
 @router.get('/get_booked_times')
-async def get_booked_times(appointment_date: date, master_id: int):
+async def get_booked_times(appointment_date: date):
     time_list = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00',
          '12:30', "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
          "16:00", "16;30", "17:00", "17:30"]
-    result = await ApplicationDAO.get_booked_times(appointment_date, master_id)
+    result = await ApplicationDAO.get_booked_times(appointment_date)
     if result:
         result_strs = [t.strftime("%H:%M") for t in result]
         new_time_list = []
         for time in time_list:
             if any([time in result_strs]) is False:
                 new_time_list.append(time)
+                print(new_time_list)
         return new_time_list
     return time_list
 

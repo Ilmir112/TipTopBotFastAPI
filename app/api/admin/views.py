@@ -27,7 +27,7 @@ class ServiceAdmin(ModelView, model=Service):
 
 class ApplicationAdmin(ModelView, model=Application):
     column_list = ([c.name for c in Application.__table__.c][4:-2] +
-                   ['master.master_name','service.service_name'] +
+                   ['service.service_name'] +
                    ['user.telephone_number'])
 
     name = 'Запись'

@@ -2,7 +2,7 @@ from aiogram.types import ReplyKeyboardMarkup, WebAppInfo, InlineKeyboardMarkup,
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 from app.config import settings
-from emoji import emojize
+
 
 
 def main_keyboard(user_id: int, first_name: str, has_phone: bool=False) -> ReplyKeyboardMarkup:

@@ -64,9 +64,10 @@ async def handle_contact(message: Message, state: FSMContext):
             print(f"Номер телефона: {phone_number}")
 
             await UsersDAO.update(
-                filter_by={'telegram_id': message.from_user.id},
-                values={'telephone_number': phone_number}
+                {'telegram_id': message.from_user.id},
+                telephone_number=phone_number
             )
+
             await message.answer("Спасибо! Ваш номер сохранен.", reply_markup=types.ReplyKeyboardRemove())
             await greet_user(message, is_new_user=False, has_phone=True)
     else:
