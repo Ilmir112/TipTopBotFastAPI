@@ -1,11 +1,15 @@
+from typing import Text
+
 from aiogram import Router, F, types
 from aiogram.enums import ContentType
-from aiogram.filters import CommandStart
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.filters import CommandStart, StateFilter
+from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 
 from app.api.users.dao import UsersDAO
 from app.api.users.dependencies import login_via_telegram
+from app.api.users.models import SuperUsers
+from app.api.users.router import register_user
 from app.bot.keyboards.kbs import app_keyboard
 from app.bot.utils.utils import greet_user, get_about_us_text, user_has_phone
 from app.config import settings
@@ -70,6 +74,9 @@ async def handle_contact(message: Message, state: FSMContext):
 
             await message.answer("Спасибо! Ваш номер сохранен.", reply_markup=types.ReplyKeyboardRemove())
             await greet_user(message, is_new_user=False, has_phone=True)
+
+    if current_state == UserStates.waiting_for_contact:
+        pass
     else:
         print("Контакт не получен")
 

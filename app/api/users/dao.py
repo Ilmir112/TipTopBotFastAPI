@@ -8,7 +8,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.functions import now
 
 from app.dao.base import BaseDAO
-from app.api.users.models import Users, SuperUsers, UserToken
+from app.api.users.models import Users, SuperUsers
 from app.database import async_session_maker
 
 
@@ -19,5 +19,4 @@ class UsersDAO(BaseDAO):
 class SuperUsersDAO(BaseDAO):
     model = SuperUsers
 
-class UserTokenDao(BaseDAO):
-    model = UserToken
+

@@ -57,7 +57,7 @@ async def get_current_user(token: str = Depends(get_token)):
 
 # Новая функция для входа через Telegram
 async def login_via_telegram(telegram_id: int):
-    from app.api.users.router import save_token_in_db
+
     # Проверяем, что это админ
     if telegram_id != settings.ADMIN_ID:
         raise UnauthorizedException

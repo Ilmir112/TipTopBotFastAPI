@@ -7,6 +7,7 @@ from app.api.service.dao import ServiceDAO
 from app.bot.keyboards.kbs import main_keyboard, admin_keyboard
 from app.config import settings
 from app.pages.router import find_all_service
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 admin_router = Router()
 
@@ -20,7 +21,7 @@ async def admin_panel(message: Message):
         "• Управлять статусами заявок\n"
         "• Анализировать статистику\n\n"
         "Для доступа к полному функционалу, пожалуйста, перейдите по ссылке ниже.",
-        reply_markup=admin_keyboard(user_id=message.from_user.id)
+        reply_markup= await admin_keyboard(user_id=message.from_user.id)
     )
 
 
@@ -38,7 +39,7 @@ async def cmd_back_home_admin(callback: CallbackQuery):
                                    has_phone=True)
     )
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
 
 @admin_router.callback_query(F.data == "edit_services")
 async def handle_edit_application(callback_query: CallbackQuery):

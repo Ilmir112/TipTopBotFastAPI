@@ -41,7 +41,6 @@ async def read_work_days_root(request: Request, user_id: int):
 
 @router.get("/form", response_class=HTMLResponse)
 async def read_root(request: Request, user_id: int = None, first_name: str = None):
-    # masters = await MasterDAO.find_all()
     services = await ServiceDAO.find_all()
     data_page = {"request": request,
                  "user_id": user_id,
@@ -49,7 +48,6 @@ async def read_root(request: Request, user_id: int = None, first_name: str = Non
                  "title": "Запись на шиномонтаж",
                  # "masters": masters,
                  "services": services}
-    print(data_page)
     return templates.TemplateResponse("form.html", data_page)
 
 

@@ -4,7 +4,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 
-
 class Users(Base):
     __tablename__ = 'users'
 
@@ -15,8 +14,11 @@ class Users(Base):
     token: Mapped[str | None] = mapped_column(String)
 
     applications: Mapped[list["Application"]] = relationship(back_populates="user")
-
-    config = ConfigDict(from_attributes=True)
+    super_users: Mapped[list["SuperUsers"]] = relationship(
+        "SuperUsers",
+        back_populates="user",
+        foreign_keys="[SuperUsers.telegram_id]"
+    )
 
     @model_validator(mode=telephone_number)
     def validate_telephone_number(cls, v):
@@ -38,6 +40,7 @@ class Users(Base):
 
         return digits
 
+
 class SuperUsers(Base):
     __tablename__ = "super_users"
 
@@ -49,10 +52,17 @@ class SuperUsers(Base):
     password = Column(String, nullable=False)
     access_level = Column(String, nullable=False)
 
+    telegram_id: Mapped[int] = mapped_column(BigInteger, ForeignKey('users.telegram_id'), nullable=True)
 
-class UserToken(Base):
-    __tablename__ = 'user_tokens'
+    user: Mapped["Users"] = relationship(
+        "Users",
+        back_populates="super_users",
+        foreign_keys=[telegram_id]
+    )
 
-    id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, unique=True, nullable=False)
-    token = Column(String, nullable=False)
+
+
+
+
+
+

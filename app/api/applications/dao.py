@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List
 
 from pydantic import BaseModel
@@ -85,26 +85,27 @@ class ApplicationDAO(BaseDAO):
                 query = (
                     select(cls.model)
                     .options(joinedload(cls.model.service))
+                    .where(cls.model.appointment_date <= datetime.now().date() + timedelta(days=7))
                     .filter_by(user_id=user_id)
                 )
                 result = await session.execute(query)
-                applications = result.scalars().all()
-                # Фильтруем заявки по дате и времени
-                future_applications = [
-                    app for app in applications
-                    if datetime.combine(app.appointment_date, app.appointment_time) > datetime.now()
-                ]
+                if result:
+                    applications = result.scalars().all()
+                    # Фильтруем заявки по дате и времени
+                    future_applications = [
+                        app for app in applications
+                    ]
 
-                # Возвращаем список словарей с нужными полями
-                return [
-                    {
-                        "application_id": app.id,
-                        "service_name": app.service.service_name,
-                        "appointment_date": app.appointment_date,
-                        "appointment_time": app.appointment_time,
-                    }
-                    for app in future_applications
-                ]
+                    # Возвращаем список словарей с нужными полями
+                    return [
+                        {
+                            "application_id": app.id,
+                            "service_name": app.service.service_name,
+                            "appointment_date": app.appointment_date,
+                            "appointment_time": app.appointment_time,
+                        }
+                        for app in future_applications
+                    ]
             except SQLAlchemyError as e:
                 print(f"Error while fetching applications for user {user_id}: {e}")
                 return None
@@ -123,6 +124,7 @@ class ApplicationDAO(BaseDAO):
                 query = (
                     select(cls.model)
                     .options(joinedload(cls.model.service))
+                    .where(cls.model.appointment_date >= datetime.now().date() - timedelta(days=5))
                 )
                 result = await session.execute(query)
                 applications = result.scalars().all()
