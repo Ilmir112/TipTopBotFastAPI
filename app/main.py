@@ -13,6 +13,7 @@ from app.api.admin.views import ServiceAdmin
 from app.api.admin.views import UserAdmin
 from app.bot.create_bot import bot, dp, stop_bot, start_bot
 from app.bot.handlers.admin_router import admin_router
+from app.bot.handlers.send_message import send_reminders
 from app.bot.handlers.user_router import user_router
 from app.config import settings
 from app.database import engine
@@ -27,6 +28,19 @@ from aiogram.types import Update
 from fastapi import FastAPI, Request
 from sqladmin import Admin
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+# Импортируйте ваши роутеры, функции и переменные тут
+# from your_module import user_router, admin_router, start_bot, stop_bot, send_reminders_wrapper, bot, dp, settings
+
+scheduler = AsyncIOScheduler()
+
+
+async def start_scheduler():
+    scheduler.add_job(send_reminders, 'interval', minutes=1)
+    scheduler.start()
+
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
@@ -37,6 +51,9 @@ async def lifespan(app: FastAPI):
     dp.include_router(admin_router)
     await start_bot()
     webhook_url = settings.get_webhook_url()
+
+    # Запуск планировщика задач
+    await start_scheduler()
 
     await bot.set_webhook(url=webhook_url,
                           allowed_updates=dp.resolve_used_update_types(),
@@ -51,8 +68,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-app.mount('/static', StaticFiles(directory='app/static'), 'static')
-# app.mount('/static', StaticFiles(directory='static'), 'static')
+# app.mount('/static', StaticFiles(directory='app/static'), 'static')
+app.mount('/static', StaticFiles(directory='static'), 'static')
 
 
 @app.post("/webhook")
@@ -61,6 +78,7 @@ async def webhook(request: Request) -> None:
     update = Update.model_validate(await request.json(), context={"bot": bot})
     await dp.feed_update(bot, update)
     logging.info("Update processed")
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -88,6 +106,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         },
     )
 
+
 app.include_router(router_pages)
 # app.include_router(router_masters)
 app.include_router(router_service)
@@ -95,10 +114,9 @@ app.include_router(router_working_day)
 app.include_router(router_applications)
 app.include_router(router_users)
 
-
 origins = [
     "http://localhost:3000"
-    ]
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -120,7 +138,6 @@ admin.add_view(UserAdmin)
 # admin.add_view(MastersAdmin)
 admin.add_view(ServiceAdmin)
 admin.add_view(ApplicationAdmin)
-
 
 if __name__ == "__main__":
     uvicorn.run("app.main:app", host="127.0.0.1", port=8000, reload=True)

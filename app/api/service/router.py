@@ -28,6 +28,7 @@ async def find_service_by_id(
 @router.get("/find_all")
 async def find_service_all(user: Users = Depends(get_current_user)):
     result = await ServiceDAO.find_all()
+
     return result
 
 

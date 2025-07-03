@@ -1,4 +1,3 @@
-# Создаем класс состояний для сбора данных суперюзера
 from aiogram.filters import StateFilter
 from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
@@ -6,7 +5,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, Message, InlineKeyboardMarkup
 
 from app.api.users.models import SuperUsers
-from app.api.users.router import register_user
+from app.api.users.router import register_super_user
 from app.api.users.schemas import SUsersRegister
 from app.bot.handlers.admin_router import admin_router
 
@@ -97,9 +96,9 @@ async def process_access_level(callback_query: types.CallbackQuery, state: FSMCo
         access_level=access_level,
         telegram_id=data['telegram_id']
     )
-    print(new_superuser)
+
     # Сохраняем в базу (предположим, у вас есть сессия SQLAlchemy)
-    result = await register_user(new_superuser)
+    result = await register_super_user(new_superuser)
     if result:
         await callback_query.message.answer("Суперпользователь успешно создан!", reply_markup=None)
 

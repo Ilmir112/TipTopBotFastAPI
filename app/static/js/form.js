@@ -1,18 +1,29 @@
-// Объявляем переменную для хранения рабочих дней
-let workingDays = [];
+//
+// // Функция для обновления доступности дат в input type="date"
+// function updateDateInputAvailability() {
+//     const dateInput = document.getElementById('date');
+//
+//     // Удаляем все ранее добавленные кастомные ограничения
+//     dateInput.removeAttribute('min');
+//     dateInput.removeAttribute('max');
+//
+//     // Вариант 1: блокировать только рабочие дни (если нужно)
+//     // Для этого можно использовать событие 'oninput' или 'onchange' и проверять выбранную дату
+//
+//     // Вариант 2: использовать атрибут 'disabled' для отдельных дат — не поддерживается стандартным input,
+//     // поэтому лучше реализовать через обработчик события
+//
+//     // Добавим обработчик изменения даты
+//     dateInput.addEventListener('change', () => {
+//         const selectedDate = dateInput.value;
+//         if (workingDays.includes(selectedDate)) {
+//             // Если дата входит в рабочие дни — показываем сообщение или делаем что-то еще
+//             alert('Выбран рабочий день. Пожалуйста, выберите другой день.');
+//             dateInput.value = ''; // сбрасываем выбор
+//         }
+//     });
+// }
 
-// Функция для получения списка рабочих дней с сервера
-async function fetchWorkingDays() {
-    try {
-        const response = await fetch('/day/find_all');
-        if (!response.ok) throw new Error('Ошибка при получении рабочих дней');
-        const data = await response.json();
-        // Предположим, что сервер возвращает массив строк дат
-
-    } catch (error) {
-        console.error(error);
-    }
-}
 // Ваша существующая функция для получения занятых времён
 async function fetchBookedTimes(appointmentDate) {
     const response = await fetch(`/api/get_booked_times?appointment_date=${appointmentDate}`);
@@ -22,6 +33,7 @@ async function fetchBookedTimes(appointmentDate) {
     const bookedTimes = await response.json();
     return bookedTimes; // массив строк, например ['09:00', '10:30', ...]
 }
+
 
 // Функция для обновления доступных времён
 async function updateAvailableTimes() {
@@ -57,7 +69,6 @@ window.addEventListener('load', () => {
     updateAvailableTimes();
 });
 
-// Остальной ваш существующий код
 
 document.getElementById('appointmentForm').addEventListener('submit', function (e) {
     e.preventDefault();
@@ -66,8 +77,9 @@ document.getElementById('appointmentForm').addEventListener('submit', function (
     const service = document.getElementById('service').options[document.getElementById('service').selectedIndex].text;
     const date = document.getElementById('date').value;
     const time = document.getElementById('selectedTime').value;
+    console.log(time)
 
-    const popupMessage = `${name}, вы планируете запись на ${service.toLowerCase()} ${date} в ${time}.`;
+    const popupMessage = `${name}, вы планируете запись на услугу \n${service.toLowerCase()} \n${date} в ${time}.`;
     document.getElementById('popupMessage').textContent = popupMessage;
 
     document.getElementById('popup').style.display = 'flex';
@@ -129,79 +141,66 @@ buttons.forEach(button => {
 
 // Обработчик для закрытия попапа и отправки данных
 document.getElementById('closePopup').addEventListener('click', async function () {
-        const name = document.getElementById('name').value.trim();
-        const serviceSelect = document.getElementById('service');
-        const serviceText = serviceSelect ? serviceSelect.value : '';
-        // const serviceId = serviceValue ? parseInt(serviceValue.split('_')[0], 10) : null;
-        // const serviceText = document.getElementById('service').trim();
-        const date = document.getElementById('date').value;
-        const userId = document.getElementById('user_id') ? document.getElementById('user_id').value : '';
-        // const master = document.getElementById('master') ? document.getElementById('master').value.trim() : '';
+    const name = document.getElementById('name').value.trim();
+    const serviceSelect = document.getElementById('service');
+    const serviceText = serviceSelect ? serviceSelect.value : '';
+    const date = document.getElementById('date').value;
+    const userId = document.getElementById('user_id') ? document.getElementById('user_id').value : '';
+    const appointment_time = document.getElementById('selectedTime').value;
 
-        // Получаем выбранное время из скрытого поля
-        const appointment_time = document.getElementById('selectedTime').value;
+    // Валидация
+    if (name.length < 2 || name.length > 50) {
+        alert("Имя должно быть от 2 до 50 символов.");
+        return;
+    }
+    if (serviceText.length < 2 || serviceText.length > 50) {
+        alert("Услуга должна быть от 2 до 50 символов.");
+        return;
+    }
+    if (!appointment_time) {
+        alert("Пожалуйста, выберите время услуги.");
+        return;
+    }
 
-        // Проверяем валидность полей
-        if (name.length < 2 || name.length > 50) {
-            alert("Имя должно быть от 2 до 50 символов.");
-            return;
-        }
+    const appointmentData = {
+        name: name,
+        service: serviceText,
+        appointment_date: date,
+        appointment_time: appointment_time,
+        user_id: userId
+    };
 
-        if (serviceText.length < 2 || serviceText.length > 50) {
-            alert("Услуга должна быть от 2 до 50 символов.");
-            return;
-        }
+    try {
+        const response = await fetch('/api/appointment', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(appointmentData)
+        });
+        const result = await response.json();
 
-        // if (master && (master.length < 2 || master.length > 50)) {
-        //     alert("Имя мастера должно быть от 2 до 50 символов.");
-        //     return;
-        // }
+        if (result.status === 'busy') {
+            // Время занято — показываем сообщение в попап
+            document.getElementById('popupMessage').innerText = 'Это время уже занято. Пожалуйста, выберите другое.';
+            document.getElementById('popup').style.display = 'block'; // показываем попап
+        } else if (result.status === 'success') {
+            document.getElementById('popupMessage').innerText = 'Вы успешно записаны!';
+            // Можно оставить попап открытым чуть дольше или скрыть его сразу
+            document.getElementById('popup').style.display = 'none';
 
-        if (!appointment_time) {
-            alert("Пожалуйста, выберите время услуги.");
-            return;
-        }
-
-        // Создаем объект с данными
-        const appointmentData = {
-            name: name,
-            service: serviceText,
-            appointment_date: date,
-            appointment_time: appointment_time,
-            // master: master,
-            user_id: userId
-        };
-
-        // Преобразуем объект в JSON строку
-        const jsonData = JSON.stringify(appointmentData);
-
-        // Отправляем POST запрос на /api/appointment
-        try {
-            const response = await fetch('/api/appointment', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: jsonData
-            });
-            const result = await response.json();
-            console.log('Response from /form:', result);
-
-            if (result.status === 'busy') {
-                // Время занято — показываем окно с сообщением
-                document.getElementById('popupMessage').innerText = 'Это время уже занято. Пожалуйста, выберите другое.';
-                document.getElementById('popup').style.display = 'block'; // показываем попап
-            } else if (result.status === 'success') {
-                // Всё прошло успешно — закрываем попап и закрываем WebApp
-                document.getElementById('popup').style.display = 'none';
-                setTimeout(() => {
-                    window.Telegram.WebApp.close();
-                }, 100);
-            }
-        } catch (error) {
-            console.error('Error sending POST request:', error);
+            // Задержка для отображения сообщения
+            setTimeout(() => {
+                window.Telegram.WebApp.close();
+            }, 1000); // 1 секунда
         }
     }
-)
-// Вызов функции при загрузке страницы
-window.addEventListener('load', () => {
-    fetchWorkingDays();
-});
+catch
+(error)
+{
+    console.error('Ошибка при отправке:', error);
+    alert('Произошла ошибка. Попробуйте еще раз.');
+}
+})
+;
+
+
+

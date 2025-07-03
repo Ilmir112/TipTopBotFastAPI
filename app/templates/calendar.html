@@ -6,6 +6,7 @@
 
 {% block styles %}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+
     <link rel="stylesheet" href="/static/css/calendar.css">
 {% endblock %}
 
@@ -19,12 +20,18 @@
         <ul id="selectedDatesList"></ul>
     </main>
 
+
+
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Подключение локализации русского языка для flatpickr -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+
     <script>
         // Инициализация flatpickr
         const datePicker = flatpickr("#datePicker", {
             mode: "multiple",
             dateFormat: "Y-m-d",
+            locale: "ru",
             onChange: function (selectedDates) {
                 updateSelectedDatesList(selectedDates);
             }
@@ -65,7 +72,7 @@
             const selectedDates = datePicker.selectedDates;
 
             // Фильтруем, чтобы исключить удаляемую дату
-            const remainingDates = selectedDates.filter(d => d.toISOString().slice(0, 10) !== date);
+            const remainingDates = selectedDates.filter(d => d.toISOString().split('T')[0] !== date);
 
             // Обновляем календарь
             datePicker.setDate(remainingDates, true);
@@ -77,7 +84,7 @@
         async function handleRemoveDate(date) {
             await deleteWorkingDay(date); // Удаление из базы
             // Удаляем дату из picker
-            const remainingDates = datePicker.selectedDates.filter(d => d.toISOString().slice(0, 10) !== date);
+            const remainingDates = datePicker.selectedDates.filter(d => d.toISOString().split('T')[0] !== date);
             datePicker.setDate(remainingDates, true);
             // Обновляем список отображения
             updateSelectedDatesList(remainingDates);
@@ -90,7 +97,7 @@
                 const data = await response.json();
                 if (data && Array.isArray(data)) {
                     // Предполагается, что сервер возвращает массив объектов с полем date в формате 'YYYY-MM-DD'
-                    const dates = data.map(item => new Date(item.date));
+                    const dates = data;
                     // Устанавливаем эти даты в picker без вызова onChange
                     datePicker.setDate(dates, false);
                     updateSelectedDatesList(dates);
@@ -116,10 +123,37 @@
             }
         }
 
-        // Удаление рабочего дня из базы данных
+        function formatDateToYYYYMMDD(dateInput) {
+            const dateObj = new Date(dateInput);
+            if (isNaN(dateObj.getTime())) {
+                // Некорректная дата
+                return null;
+            }
+            const year = dateObj.getFullYear();
+            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+            const day = String(dateObj.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
         async function deleteWorkingDay(date) {
+            // Проверка формата
+            const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+            let formattedDate = date;
+
+            if (!datePattern.test(formattedDate)) {
+                // Не в нужном формате, пытаемся преобразовать
+                const newDate = formatDateToYYYYMMDD(formattedDate);
+                if (newDate) {
+                    formattedDate = newDate;
+                } else {
+                    console.error("Некорректная дата:", date);
+                    return; // Не продолжаем выполнение
+                }
+            }
+
             try {
-                await fetch(`/day/remove?working_day=${date.toISOString().split('T')[0]}`, {
+                await fetch(`/day/remove?working_day=${formattedDate}`, {
                     method: "DELETE",
                     headers: {
                         "Content-Type": "application/json"

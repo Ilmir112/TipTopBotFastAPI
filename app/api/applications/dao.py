@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from time import strptime
 from typing import List
 
 from pydantic import BaseModel
@@ -10,11 +11,11 @@ from app.dao.base import BaseDAO
 from app.api.applications.models import Application
 from app.database import async_session_maker
 
+
 class AppointmentRequest(BaseModel):
     appointment_date: str  # формат 'YYYY-MM-DD'
     appointment_time: str  # формат 'HH:MM'
     # master_id: int
-
 
 
 class ApplicationDAO(BaseDAO):
@@ -27,8 +28,6 @@ class ApplicationDAO(BaseDAO):
             query = select(cls.model.appointment_time).where(cls.model.appointment_date == appointment_date)
             result = await session.execute(query)
             return result.scalars().all()
-
-
 
     # Здесь должна быть логика получения данных из базы
     # Для примера возвращаем статичный список
@@ -59,10 +58,7 @@ class ApplicationDAO(BaseDAO):
         # Проверяем доступность времени
         is_available = await cls.is_time_available(appointment_date, appointment_time)
         if not is_available:
-            raise Exception("Выбранное время уже занято.")
             return None
-
-
 
         # Если свободно — добавляем запись
         return await cls.add(**values)
@@ -86,25 +82,26 @@ class ApplicationDAO(BaseDAO):
                     select(cls.model)
                     .options(joinedload(cls.model.service))
                     .where(cls.model.appointment_date <= datetime.now().date() + timedelta(days=7))
-                    .filter_by(user_id=user_id)
+                    .filter_by(user_id=user_id).order_by(
+                        cls.model.appointment_date.asc(),
+                        cls.model.appointment_time.asc()
+                    )
                 )
                 result = await session.execute(query)
                 if result:
                     applications = result.scalars().all()
-                    # Фильтруем заявки по дате и времени
-                    future_applications = [
-                        app for app in applications
-                    ]
+
 
                     # Возвращаем список словарей с нужными полями
                     return [
                         {
                             "application_id": app.id,
                             "service_name": app.service.service_name,
-                            "appointment_date": app.appointment_date,
-                            "appointment_time": app.appointment_time,
+                            "appointment_date": app.appointment_date.strftime("%d.%m.%Y"),
+                            "appointment_time": app.appointment_time.strftime("%H.%M"),
+                            "client_name": app.client_name
                         }
-                        for app in future_applications
+                        for app in applications
                     ]
             except SQLAlchemyError as e:
                 print(f"Error while fetching applications for user {user_id}: {e}")
@@ -123,8 +120,8 @@ class ApplicationDAO(BaseDAO):
                 # Используем joinedload для загрузки связанных данных
                 query = (
                     select(cls.model)
-                    .options(joinedload(cls.model.service))
-                    .where(cls.model.appointment_date >= datetime.now().date() - timedelta(days=5))
+                    .options(joinedload(cls.model.service), joinedload(cls.model.user))
+                    .where(cls.model.appointment_date >= datetime.now().date() - timedelta(days=1))
                 )
                 result = await session.execute(query)
                 applications = result.scalars().all()
@@ -135,14 +132,13 @@ class ApplicationDAO(BaseDAO):
                         "application_id": app.id,
                         "user_id": app.user_id,
                         "service_name": app.service.service_name,  # Название услуги
-                        "appointment_date": app.appointment_date,
-                        "appointment_time": app.appointment_time,
-                        "client_name": app.client_name  # Имя клиента
-
+                        "appointment_date": app.appointment_date.strftime("%d.%m.%Y"),
+                        "appointment_time": app.appointment_time.strftime("%H.%M"),
+                        "client_name": app.client_name,  # Имя клиента
+                        "telephone_number": app.user.telephone_number
                     }
                     for app in applications
                 ]
             except SQLAlchemyError as e:
                 print(f"Error while fetching all applications: {e}")
                 return None
-

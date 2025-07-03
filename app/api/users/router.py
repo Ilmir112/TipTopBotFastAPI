@@ -20,7 +20,25 @@ router = APIRouter(prefix='/auth', tags=["Auth & пользователи"])
 
 
 @router.post("/register")
-async def register_user(user_data: SUsersRegister):
+async def register_user(user_data: SUsers):
+    try:
+        existing_user = await UsersDAO.find_one_or_none(username=user_data.username)
+        if existing_user:
+            bot.send_message("Пользователь уже существует")
+            raise UserAlreadyExistsException
+
+        result = await UsersDAO.add(
+            first_name=user_data.first_name,
+            username=user_data.username,
+            telephone_number=user_data.telephone_number
+        )
+        logger.info("Users adding", extra={"TipTop": user_data.username}, exc_info=True)
+        return result
+    except Exception as e:
+        logger.error('Critical error', extra=e, exc_info=True)
+
+@router.post("/register_super_user")
+async def register_super_user(user_data: SUsersRegister):
     try:
         existing_user = await SuperUsersDAO.find_one_or_none(login_user=user_data.login_user)
         if existing_user:
@@ -70,7 +88,7 @@ async def read_users_all():
 @router.get("/find_by_id")
 async def read_users_find_by_id(user_id: int):
     result =  await SuperUsersDAO.find_one_or_none_by_id(user_id)
-    print(f'dfdf{result, user_id}')
+
     if result:
         return result
 

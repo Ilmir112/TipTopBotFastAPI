@@ -69,7 +69,6 @@ async def handle_edit_application(callback_query: CallbackQuery):
 @admin_router.callback_query(F.data.startswith("service_"))
 async def handle_service_selection(callback_query: CallbackQuery):
     service_id = callback_query.data.split("_")[1]
-    print(f"Выбрана услуга ID: {service_id}")
 
     # Показываем меню с действиями
     kb = [

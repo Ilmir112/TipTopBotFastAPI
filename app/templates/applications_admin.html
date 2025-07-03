@@ -17,8 +17,10 @@
                 <tr>
                     <th>Дата</th>
                     <th>Время</th>
+                    <th>имя</th>
+                    <th>номер телефона</th>
                     <th>Услуга</th>
-                    <th>удалить</th>
+                    <th> </th>
 
                 </tr>
                 </thead>
@@ -27,6 +29,8 @@
                     <tr>
                         <td>{{ application.appointment_date }}</td>
                         <td>{{ application.appointment_time }}</td>
+                        <td>{{ application.client_name }}</td>
+                        <td>{{ application.telephone_number }}</td>
                         <td>{{ application.service_name }}</td>
                         <td>
                             <button class="delete-btn" data-id="{{ application.application_id }}">Удалить</button>

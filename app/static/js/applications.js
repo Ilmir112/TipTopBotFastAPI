@@ -24,3 +24,33 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }, 66);
     }, false);
 });
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const applicationId = button.getAttribute('data-id');
+            console.log(applicationId)
+            if (confirm('Вы уверены, что хотите удалить эту заявку?')) {
+                fetch(`/api/delete?application_id=${applicationId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Удаляем строку из таблицы
+                        button.closest('tr').remove();
+                    } else {
+                        alert('Ошибка при удалении заявки.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Произошла ошибка.');
+                });
+            }
+        });
+    });
+});

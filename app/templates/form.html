@@ -1,88 +1,111 @@
 {% extends "base.html" %}
 
 {% block title %}
-{{ title }}
+    {{ title }}
 {% endblock %}
 
 {% block styles %}
-<link rel="stylesheet" href="/static/css/form.css">
+
+    <link rel="stylesheet" href="/static/css/form.css">
+    <!-- Подключение flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 {% endblock %}
 
 {% block content %}
-<main>
-    <form id="appointmentForm">
-        <h1>Запись на услуги</h1>
+    <main>
 
-        <div class="form-group">
-            <label for="name">Имя</label>
-            <input type="text" id="name" name="name" value="{{ first_name }}" required placeholder="Введите ваше имя">
-        </div>
+        <form id="appointmentForm">
+            <h1>Запись на услуги</h1>
 
-
-        <div class="form-group">
-            <label for="service">Услуга</label>
-            <select id="service" name="service" required>
-                <option value="" disabled selected>Выберите услугу</option>
-                <!-- Цикл для вывода списка услуг -->
-                {% for service in services %}
-                <option value="{{ service.service_id }}_{{ service.service_name }}">{{ service.service_name }}</option>
-                {% endfor %}
-            </select>
-{#        <div class="form-group">#}
-{#            <label for="master">Мастер</label>#}
-{#            <select id="master" name="master" required>#}
-{#                <option value="" disabled selected>Выберите мастера</option>#}
-{#                <!-- Цикл для вывода списка мастеров -->#}
-{#                {% for master in masters %}#}
-{#                <option value="{{ master.master_id }}_{{ master.master_name }}">{{ master.master_name }}</option>#}
-{#                {% endfor %}#}
-{#            </select>#}
-{#        </div>#}
-        </div>
-
-        <div class="form-group">
-            <label for="date">Дата услуги</label>
-            <input type="date" id="date" name="date" required>
-        </div>
-
-        <div class="form-group">
-    <label>Время услуги</label>
-    <div id="time-buttons">
-        <button type="button" class="time-btn" data-time="09:00">09:00</button>
-        <button type="button" class="time-btn" data-time="09:30">09:30</button>
-        <button type="button" class="time-btn" data-time="10:00">10:00</button>
-        <button type="button" class="time-btn" data-time="10:30">10:30</button>
-        <button type="button" class="time-btn" data-time="11:00">11:00</button>
-        <button type="button" class="time-btn" data-time="11:30">11:30</button>
-        <button type="button" class="time-btn" data-time="12:00">12:00</button>
-        <button type="button" class="time-btn" data-time="12:30">12:30</button>
-        <button type="button" class="time-btn" data-time="13:00">13:00</button>
-        <button type="button" class="time-btn" data-time="13:30">13:30</button>
-        <button type="button" class="time-btn" data-time="14:00">14:00</button>
-        <button type="button" class="time-btn" data-time="14:30">14:30</button>
-        <button type="button" class="time-btn" data-time="15:00">15:00</button>
-        <button type="button" class="time-btn" data-time="15:30">15:30</button>
-        <button type="button" class="time-btn" data-time="16:00">16:00</button>
-        <button type="button" class="time-btn" data-time="16:30">16:30</button>
-        <button type="button" class="time-btn" data-time="17:00">17:00</button>
-        <button type="button" class="time-btn" data-time="17:30">17:30</button>
-    </div>
-    <!-- Скрытое поле для хранения выбранного времени -->
-    <input type="hidden" id="selectedTime" name="time">
-</div>
+            <div class="form-group">
+                <label for="name">Имя</label>
+                <input type="text" id="name" name="name" value="{{ first_name }}" required
+                       placeholder="Введите ваше имя">
+            </div>
 
 
+            <div class="form-group">
+                <label for="service">Услуга</label>
+                <select id="service" name="service" required>
+                    <option value="" disabled selected>Выберите услугу</option>
+                    <!-- Цикл для вывода списка услуг -->
+                    {% for service in services %}
+                        <option value="{{ service.service_id }}_{{ service.service_name }}">{{ service.service_name }}</option>
+                    {% endfor %}
+                </select>
+                {#        <div class="form-group">#}
+                {#            <label for="master">Мастер</label>#}
+                {#            <select id="master" name="master" required>#}
+                {#                <option value="" disabled selected>Выберите мастера</option>#}
+                {#                <!-- Цикл для вывода списка мастеров -->#}
+                {#                {% for master in masters %}#}
+                {#                <option value="{{ master.master_id }}_{{ master.master_name }}">{{ master.master_name }}</option>#}
+                {#                {% endfor %}#}
+                {#            </select>#}
+                {#        </div>#}
+            </div>
 
-        <input type="hidden" id="user_id" value="{{ user_id }}">
-        <button type="submit" class="btn">Записаться</button>
-    </form>
-</main>
+            <div class="form-group">
+                <label for="date">Дата услуги</label>
+                <input type="text" id="date" name="date" required>
+            </div>
 
-<!-- Попап -->
-{% include 'include/popup.html' %}
+            <div class="form-group">
+                <label>Время услуги</label>
+                <div id="time-buttons">
+                    <button type="button" class="time-btn" data-time="09:00">09:00</button>
+                    <button type="button" class="time-btn" data-time="09:30">09:30</button>
+                    <button type="button" class="time-btn" data-time="10:00">10:00</button>
+                    <button type="button" class="time-btn" data-time="10:30">10:30</button>
+                    <button type="button" class="time-btn" data-time="11:00">11:00</button>
+                    <button type="button" class="time-btn" data-time="11:30">11:30</button>
+                    <button type="button" class="time-btn" data-time="12:00">12:00</button>
+                    <button type="button" class="time-btn" data-time="12:30">12:30</button>
+                    <button type="button" class="time-btn" data-time="13:00">13:00</button>
+                    <button type="button" class="time-btn" data-time="13:30">13:30</button>
+                    <button type="button" class="time-btn" data-time="14:00">14:00</button>
+                    <button type="button" class="time-btn" data-time="14:30">14:30</button>
+                    <button type="button" class="time-btn" data-time="15:00">15:00</button>
+                    <button type="button" class="time-btn" data-time="15:30">15:30</button>
+                    <button type="button" class="time-btn" data-time="16:00">16:00</button>
+                    <button type="button" class="time-btn" data-time="16:30">16:30</button>
+                    <button type="button" class="time-btn" data-time="17:00">17:00</button>
+                    <button type="button" class="time-btn" data-time="17:30">17:30</button>
+                </div>
+                <!-- Скрытое поле для хранения выбранного времени -->
+                <input type="hidden" id="selectedTime" name="time">
+            </div>
+
+
+            <input type="hidden" id="user_id" value="{{ user_id }}">
+            <button type="submit" class="btn">Записаться</button>
+        </form>
+    </main>
+
+    <!-- Попап -->
+    {% include 'include/popup.html' %}
 
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/js/form.js"></script>
+    <!-- Подключение flatpickr JS -->
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- Подключение локализации русского языка для flatpickr -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
+    <!-- Ваш собственный скрипт -->
+    <script src="/static/js/form.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const workingDays = {{ working_days|tojson }};
+            flatpickr("#date", {
+                dateFormat: "Y-m-d",
+                enable: workingDays,
+                locale: "ru", // указываем русский язык
+                appendTo: document.body,
+            });
+        });
+    </script>
 {% endblock %}
+
+

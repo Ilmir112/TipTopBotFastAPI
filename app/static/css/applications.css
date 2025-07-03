@@ -54,7 +54,18 @@ th {
     text-transform: uppercase;
     letter-spacing: 1px;
 }
-
+.delete-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    min-font-size: 12;
+    border: none;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+.delete-btn:hover {
+    background-color: rgba(9, 6, 6, 0.1);
+}
 tr:hover {
     background-color: rgba(255, 255, 255, 0.1);
 }
