@@ -226,7 +226,8 @@ async def time_chosen(callback_query: types.CallbackQuery, state: FSMContext):
             if user_id:
                 if user_id > 52565458:
                     await bot.send_message(chat_id=user_id, text=message)
-            await bot.send_message(chat_id=settings.ADMIN_ID, text=admin_message)
+            for admin_id in settings.ADMIN_LIST:
+                await bot.send_message(admin_id, text=admin_message)
 
             await callback_query.message.edit_text("Спасибо! Ваша заявка принята.")
             await state.clear()

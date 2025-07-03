@@ -17,8 +17,7 @@ def main_keyboard(user_id: int, first_name: str, has_phone: bool = False) -> Rep
     if not has_phone:
         kb.button(text="Отправить контакт 📞", request_contact=True)
 
-    if user_id == settings.ADMIN_ID:
-
+    if user_id in settings.ADMIN_LIST:
         kb.button(text="🔑 Админ панель")
     else:
         kb.button(text="ℹ️ О нас")
@@ -44,9 +43,12 @@ async def admin_keyboard(user_id: int) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     kb.button(text="🏠 На главную", callback_data="back_home")
     kb.button(text="📝 Смотреть заявки", web_app=WebAppInfo(url=url_applications))
+    kb.button(text="📰 Добавить новость", callback_data="add_news")
     # kb.button(text="📝 Смотреть сайт", url="https://7db91ec2-75b8-4079-a086-8d598f685a93.tunnel4.com/")
     kb.button(text="⏰ Редактировать рабочие дни", web_app=WebAppInfo(url=url_edit_work_days))
     kb.row(create_admin_application_button)
+    # Новая кнопка для добавления новости
+
     user_in_base = await read_users_find_by_id(user_id)
 
     if user_in_base is None:

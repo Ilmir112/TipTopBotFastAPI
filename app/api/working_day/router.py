@@ -86,7 +86,8 @@ async def add_working_day(request: Request,
                 # Добавляем новую запись
                 new_day = await WorkingDayDAO.add(date=date_obj)
                 working_day_list.append({"id": new_day.id, "date": new_day.date})
-                await bot.send_message(chat_id=settings.ADMIN_ID, text="Рабочие дни успешно добавлены!")
+                for admin_id in settings.ADMIN_LIST:
+                    await bot.send_message(chat_id=admin_id, text="Рабочие дни успешно добавлены!")
 
         return {"status": "'success"}
     except SQLAlchemyError as db_err:

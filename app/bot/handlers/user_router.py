@@ -23,8 +23,13 @@ class UserStates(StatesGroup):
     waiting_for_contact = State()
 
 
+def check_admin(user_id: int):
+    return user_id if user_id in settings.ADMIN_LIST else None
+
+
 @user_router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
+    settings.ADMIN_ID = check_admin(message.from_user.id)
     user = await UsersDAO.find_one_or_none(telegram_id=message.from_user.id)
     await state.clear()
     if not user:

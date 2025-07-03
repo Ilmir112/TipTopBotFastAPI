@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from app.api.applications.schemas import AppointmentData
 from app.bot.create_bot import bot
 from app.api.applications.dao import ApplicationDAO
+from app.bot.handlers.user_router import check_admin
 from app.bot.keyboards.kbs import main_keyboard, applications_list_keyboard
 from app.config import settings
 from app.logger import logger
@@ -95,7 +96,8 @@ async def create_appointment(request: Request):
     if result:
         if validated_data.user_id:
             await bot.send_message(chat_id=validated_data.user_id, text=message, reply_markup=kb)
-        await bot.send_message(chat_id=settings.ADMIN_ID, text=admin_message, reply_markup=kb)
+        if check_admin(validated_data.user_id):
+            await bot.send_message(chat_id=check_admin(validated_data.user_id), text=admin_message, reply_markup=kb)
         # Возвращаем успешный ответ
         return {"status": "success", "message": "Заявка успешно создана"}
     else:
@@ -146,7 +148,8 @@ async def delete_application(request: Request, application_id: int):
                 await bot.send_message(chat_id=result.user_id, text=message, reply_markup=kb)
             except Exception as e:
                 logger.error(e)
-            await bot.send_message(chat_id=settings.ADMIN_ID, text=admin_message, reply_markup=kb)
+            for admin_id in settings.ADMIN_LIST:
+                await bot.send_message(chat_id=admin_id, text=admin_message, reply_markup=kb)
             # Возвращаем успешный ответ
             return {"status": "success", "message": "Заявка успешно удалена"}
 

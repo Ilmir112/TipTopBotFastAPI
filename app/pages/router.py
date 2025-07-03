@@ -17,8 +17,8 @@ from app.api.working_day.router import find_working_day_all
 from app.config import settings
 
 router = APIRouter(prefix='', tags=['Фронтенд'])
-templates = Jinja2Templates(directory='app/templates')
-# templates = Jinja2Templates(directory='templates')
+# templates = Jinja2Templates(directory='app/templates')
+templates = Jinja2Templates(directory='templates')
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -29,7 +29,7 @@ async def read_root(request: Request):
 
 @router.get("/work_days", response_class=HTMLResponse)
 async def read_work_days_root(request: Request, user_id: int):
-    if user_id == settings.ADMIN_ID:
+    if user_id in settings.ADMIN_LIST:
 
         work_days = await WorkingDayDAO.find_all()
         working_days = list(map(lambda x: x.date.strftime("%Y-%m-%d"), work_days))
@@ -69,7 +69,7 @@ async def find_all_service():
 @router.get("/admin_telegram", response_class=HTMLResponse)
 async def read_root(request: Request, admin_id: int = None):
     data_page = {"request": request, "access": False, 'title_h1': "Панель администратора"}
-    if admin_id is None or admin_id != settings.ADMIN_ID:
+    if admin_id is None or admin_id not in settings.ADMIN_LIST:
         data_page['message'] = 'У вас нет прав для получения информации о заявках!'
         return templates.TemplateResponse("applications.html", data_page)
     else:

@@ -59,7 +59,7 @@ async def get_current_user(token: str = Depends(get_token)):
 async def login_via_telegram(telegram_id: int):
 
     # Проверяем, что это админ
-    if telegram_id != settings.ADMIN_ID:
+    if telegram_id not in settings.ADMIN_LIST:
         raise UnauthorizedException
         return None
 

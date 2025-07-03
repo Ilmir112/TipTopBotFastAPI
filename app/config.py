@@ -16,11 +16,13 @@ class Settings(BaseSettings):
 
     BOT_TOKEN: str
     BASE_SITE: str
-    ADMIN_ID: int
+    ADMIN_LIST: list
+    ADMIN_ID: str
 
     def get_webhook_url(self) -> str:
         """Возвращает URL вебхука с кодированием специальных символов."""
         return f"{self.BASE_SITE}/webhook"
+
 
     @property
     def DATABASE_URL(self):

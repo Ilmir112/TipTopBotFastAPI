@@ -1,18 +1,27 @@
 from aiogram import Router, F
+from aiogram.fsm.context import FSMContext
+
 from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, KeyboardButton, ReplyKeyboardMarkup, \
     InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from app.api.service.dao import ServiceDAO
+from app.api.users.router import read_users_all
 from app.bot.keyboards.kbs import main_keyboard, admin_keyboard
 from app.config import settings
 from app.pages.router import find_all_service
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+
+from aiogram.fsm.state import State, StatesGroup
+
+
+class NewsStates(StatesGroup):
+    waiting_for_news = State()
+
 
 admin_router = Router()
 
 
-@admin_router.message(F.text == '🔑 Админ панель', F.from_user.id.in_([settings.ADMIN_ID]))
+@admin_router.message(F.text == '🔑 Админ панель', F.from_user.id.in_(settings.ADMIN_LIST))
 async def admin_panel(message: Message):
     await message.answer(
         f"Здравствуйте, <b>{message.from_user.full_name}</b>!\n\n"
@@ -21,7 +30,7 @@ async def admin_panel(message: Message):
         "• Управлять статусами заявок\n"
         "• Анализировать статистику\n\n"
         "Для доступа к полному функционалу, пожалуйста, перейдите по ссылке ниже.",
-        reply_markup= await admin_keyboard(user_id=message.from_user.id)
+        reply_markup=await admin_keyboard(user_id=message.from_user.id)
     )
 
 
@@ -38,7 +47,6 @@ async def cmd_back_home_admin(callback: CallbackQuery):
                                    first_name=callback.from_user.first_name,
                                    has_phone=True)
     )
-
 
 
 @admin_router.callback_query(F.data == "edit_services")
@@ -66,6 +74,7 @@ async def handle_edit_application(callback_query: CallbackQuery):
         reply_markup=keyboard
     )
 
+
 @admin_router.callback_query(F.data.startswith("service_"))
 async def handle_service_selection(callback_query: CallbackQuery):
     service_id = callback_query.data.split("_")[1]
@@ -84,6 +93,8 @@ async def handle_service_selection(callback_query: CallbackQuery):
         f"Что хотите сделать с услугой {service_id}?",
         reply_markup=keyboard
     )
+
+
 @admin_router.callback_query(F.data.startswith("edit_"))
 async def handle_edit_service(callback_query: CallbackQuery):
     service_id = callback_query.data.split("_")[1]
@@ -95,6 +106,7 @@ async def handle_edit_service(callback_query: CallbackQuery):
     )
     # Можно сохранить состояние для следующего шага (например, через FSM)
 
+
 @admin_router.callback_query(F.data.startswith("delete_"))
 async def handle_delete_service(callback_query: CallbackQuery):
     service_id = callback_query.data.split("_")[1]
@@ -104,3 +116,34 @@ async def handle_delete_service(callback_query: CallbackQuery):
         await callback_query.message.answer("Услуга успешно удалена.")
     else:
         await callback_query.message.answer("Ошибка при удалении услуги.")
+
+
+@admin_router.callback_query(F.data == "add_news")
+async def handle_add_news(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer("Пожалуйста, введите текст новости, которую хотите отправить всем пользователям.")
+
+    await callback.answer()
+
+    # Предположим, что у вас есть состояние 'waiting_for_news'
+    await state.set_state(NewsStates.waiting_for_news)
+
+
+# Обработчик текста при ожидании новости
+@admin_router.message(NewsStates.waiting_for_news)
+async def process_news_message(message: Message, state: FSMContext):
+    news_text = message.text
+
+    # Получить список всех пользователей из базы данных
+    users = await read_users_all()  # Реализуйте эту функцию
+
+    for user_id in users:
+        try:
+            await message.bot.send_message(user_id.telegram_id, news_text)
+        except Exception as e:
+            # Логировать ошибку или пропустить
+            print(f"Ошибка при отправке пользователю {user_id.first_name}: {e}")
+
+    await message.answer("Новость успешно отправлена всем пользователям.")
+
+    # Сброс состояния
+    await state.clear()

@@ -53,13 +53,26 @@
                 displayDate.setDate(displayDate.getDate());
                 li.textContent = displayDate.toISOString().split('T')[0];
 
-                // Кнопка для удаления даты из списка
+                // Обработчик клика по дате (для удаления)
+                li.onclick = async () => {
+                    await deleteWorkingDay(date); // Удаление из базы
+                    // Удаляем дату из picker
+                    const remainingDates = datePicker.selectedDates.filter(d => d.toISOString().split('T')[0] !== date);
+                    datePicker.setDate(remainingDates, true);
+                    // Обновляем список отображения
+                    updateSelectedDatesList(remainingDates);
+                };
+
+                // Кнопка для удаления (оставляем для явного удаления)
                 const removeBtn = document.createElement("span");
                 removeBtn.textContent = " ×";
                 removeBtn.classList.add("remove-date");
-                // Назначение обработчика на кнопку
-                removeBtn.onclick = function () {
-                    handleRemoveDate(date);
+                removeBtn.onclick = async (e) => {
+                    e.stopPropagation(); // чтобы клик по кнопке не срабатывал как клик по всему li
+                    await deleteWorkingDay(date);
+                    const remainingDates = datePicker.selectedDates.filter(d => d.toISOString().split('T')[0] !== date);
+                    datePicker.setDate(remainingDates, true);
+                    updateSelectedDatesList(remainingDates);
                 };
 
                 li.appendChild(removeBtn);

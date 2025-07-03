@@ -135,7 +135,7 @@ class ApplicationDAO(BaseDAO):
                         "appointment_date": app.appointment_date.strftime("%d.%m.%Y"),
                         "appointment_time": app.appointment_time.strftime("%H.%M"),
                         "client_name": app.client_name,  # Имя клиента
-                        "telephone_number": app.user.telephone_number
+                        "telephone_number": getattr(app.user, 'telephone_number', "-")
                     }
                     for app in applications
                 ]
