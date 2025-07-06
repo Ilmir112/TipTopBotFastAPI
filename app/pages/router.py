@@ -1,11 +1,8 @@
-
-
 from fastapi import APIRouter
 
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
 from fastapi.responses import HTMLResponse
-
 
 from app.api.service.dao import ServiceDAO
 from app.api.applications.dao import ApplicationDAO
@@ -17,8 +14,10 @@ from app.api.working_day.router import find_working_day_all
 from app.config import settings
 
 router = APIRouter(prefix='', tags=['Фронтенд'])
-# templates = Jinja2Templates(directory='app/templates')
-templates = Jinja2Templates(directory='templates')
+templates = Jinja2Templates(directory='app/templates')
+
+
+# templates = Jinja2Templates(directory='templates')
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -30,7 +29,6 @@ async def read_root(request: Request):
 @router.get("/work_days", response_class=HTMLResponse)
 async def read_work_days_root(request: Request, user_id: int):
     if user_id in settings.ADMIN_LIST:
-
         work_days = await WorkingDayDAO.find_all()
         working_days = list(map(lambda x: x.date.strftime("%Y-%m-%d"), work_days))
         data_page = {"request": request,
@@ -39,7 +37,6 @@ async def read_work_days_root(request: Request, user_id: int):
                      "title": "Изменение рабочих дней"}
 
         return templates.TemplateResponse("calendar.html", data_page)
-
 
 
 @router.get("/form", response_class=HTMLResponse)

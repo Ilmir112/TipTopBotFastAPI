@@ -3,14 +3,14 @@
     "user_id": 1,
     "service_id": 1,
     "appointment_date": "2025-06-28",
-    "appointment_time": "9:00",
-    "client_name": "ilmir"
+    "appointment_time": "09:00",
+    "client_name": "Ilmir"
   },
   {
     "user_id": 1,
     "service_id": 1,
     "appointment_date": "2025-06-28",
-    "appointment_time": "9:30",
-    "client_name": "ilmir"
+    "appointment_time": "09:30",
+    "client_name": "Ilmir"
   }
 ]

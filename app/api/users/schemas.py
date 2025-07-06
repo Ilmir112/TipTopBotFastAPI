@@ -17,7 +17,7 @@ class SUsersRegister(BaseModel):
     surname_user: str = Field(..., min_length=2, max_length=50, description="Отчество")
     second_name: str = Field(..., min_length=2, max_length=50, description="Фамилия")
     password: str = Field(..., min_length=5, max_length=50, description="пароль")
-    access_level: str = Field(..., min_length=2, max_length=50, description="Полное имя")
+    access_level: str = Field(..., min_length=2, max_length=50, description="Уровень доступа")
     telegram_id: int = Field(..., description="ID telegram")
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

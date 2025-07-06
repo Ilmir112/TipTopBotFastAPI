@@ -1,3 +1,4 @@
+
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -11,8 +12,11 @@ dp = Dispatcher()
 async def start_bot():
 
     try:
+
         for admin_id in settings.ADMIN_LIST:
             await bot.send_message(admin_id, f'Я запущен🥳.')
+
+
     except:
         pass
 

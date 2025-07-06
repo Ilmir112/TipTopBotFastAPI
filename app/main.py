@@ -27,6 +27,7 @@ from fastapi.staticfiles import StaticFiles
 from aiogram.types import Update
 from fastapi import FastAPI, Request
 from sqladmin import Admin
+from faststream.rabbit.fastapi import RabbitRouter
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -65,11 +66,11 @@ async def lifespan(app: FastAPI):
     await stop_bot()
     logging.info("Webhook deleted")
 
-
+router_rabbit = RabbitRouter()
 app = FastAPI(lifespan=lifespan)
 
-# app.mount('/static', StaticFiles(directory='app/static'), 'static')
-app.mount('/static', StaticFiles(directory='static'), 'static')
+app.mount('/static', StaticFiles(directory='app/static'), 'static')
+# app.mount('/static', StaticFiles(directory='static'), 'static')
 
 
 @app.post("/webhook")
@@ -113,6 +114,7 @@ app.include_router(router_service)
 app.include_router(router_working_day)
 app.include_router(router_applications)
 app.include_router(router_users)
+app.include_router(router_rabbit)
 
 origins = [
     "http://localhost:3000"

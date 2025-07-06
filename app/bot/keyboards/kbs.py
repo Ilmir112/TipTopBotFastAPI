@@ -1,6 +1,6 @@
-from aiogram.types import ReplyKeyboardMarkup, WebAppInfo, InlineKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, WebAppInfo, InlineKeyboardMarkup
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
-from sqlalchemy.util import await_only
+
 
 from app.config import settings
 
@@ -14,13 +14,12 @@ def main_keyboard(user_id: int, first_name: str, has_phone: bool = False) -> Rep
     kb.button(text="🌐 Мои заявки", web_app=WebAppInfo(url=url_applications))
     kb.button(text="📝 Оставить заявку", web_app=WebAppInfo(url=url_add_application))
 
-    if not has_phone:
-        kb.button(text="Отправить контакт 📞", request_contact=True)
+    # if not has_phone:
+    #     kb.button(text="Отправить контакт 📞", request_contact=True)
 
     if user_id in settings.ADMIN_LIST:
         kb.button(text="🔑 Админ панель")
-    else:
-        kb.button(text="ℹ️ О нас")
+    kb.button(text="ℹ️ О нас")
     kb.adjust(1)
     return kb.as_markup(resize_keyboard=True)
 
@@ -87,12 +86,3 @@ def services_list_keyboard(services: list["Service"]) -> InlineKeyboardMarkup:
     kb.button(text="Назад", callback_data="back_to_main")
     return kb.as_markup()
 
-
-def masters_list_keyboard(masters: list["Master"]) -> InlineKeyboardMarkup:
-    kb = InlineKeyboardBuilder()
-    for master in masters:
-        label = master.master_name
-        callback_data = f"edit_master:{master.master_id}"
-        kb.button(text=label, callback_data=callback_data)
-    kb.button(text="Назад", callback_data="back_to_main")
-    return kb.as_markup()

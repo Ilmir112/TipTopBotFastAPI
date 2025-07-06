@@ -1,7 +1,13 @@
+import os
 from typing import Literal
-
+from urllib.parse import quote
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from faststream.rabbit import RabbitBroker
 from pydantic import ValidationError, ConfigDict
 from pydantic_settings import BaseSettings
+
+from app.logger import logger
 
 
 class Settings(BaseSettings):
@@ -22,6 +28,13 @@ class Settings(BaseSettings):
     def get_webhook_url(self) -> str:
         """Возвращает URL вебхука с кодированием специальных символов."""
         return f"{self.BASE_SITE}/webhook"
+
+    @property
+    def rabbitmq_url(self) -> str:
+        return (
+            f"amqp://{self.RABBITMQ_USERNAME}:{quote(self.RABBITMQ_PASSWORD)}@"
+            f"{self.RABBITMQ_HOST}:{self.RABBITMQ_PORT}/{self.VHOST}"
+        )
 
 
     @property
@@ -61,14 +74,18 @@ class Settings(BaseSettings):
     TOKEN: str
     CHAT_ID: str
 
-    # model_config = ConfigDict(env_file = ".env")
-    model_config = ConfigDict(env_file = '../.env')
+    model_config = ConfigDict(env_file = ".env")
+    # model_config = ConfigDict(env_file = '../.env')
 
 
 
 try:
     # Создайте экземпляр класса Settings
     settings = Settings()
+    log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log.txt")
+    logger.add(log_file_path, format=settings.FORMAT_LOG, level="INFO", rotation=settings.LOG_ROTATION)
+    broker = RabbitBroker(url=settings.rabbitmq_url)
+    scheduler = AsyncIOScheduler(jobstores={'default': SQLAlchemyJobStore(url=settings.STORE_URL)})
 
     # Для проверки
 except ValidationError as e:

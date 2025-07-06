@@ -1,5 +1,5 @@
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from aiogram.filters import StateFilter
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
@@ -7,9 +7,7 @@ from aiogram import types
 from aiogram.fsm.context import FSMContext
 
 from app.api.applications.dao import ApplicationDAO
-from app.api.applications.router import get_booked_times, create_appointment, add_appointment
-from app.api.applications.schemas import AppointmentData
-from app.api.service.dao import ServiceDAO
+from app.api.applications.router import get_booked_times
 from app.api.service.router import find_service_all
 from app.api.users.dao import UsersDAO
 from app.api.users.router import register_user
@@ -81,9 +79,6 @@ async def process_name(message: Message, state: FSMContext):
         await state.set_state(BookingStates.waiting_for_name)
 
 
-
-
-
 @user_router.message(StateFilter(BookingStates.waiting_for_name))
 async def process_telephone_number(message: Message, state: FSMContext):
     # Сохраняем номер телефона и запрашиваем услугу
@@ -136,13 +131,12 @@ async def service_chosen(callback_query: types.CallbackQuery, state: FSMContext)
 
         # Создаем список списков кнопок
         buttons = [
-        InlineKeyboardButton(text=date_str, callback_data=f"date_{date_str}")
+            InlineKeyboardButton(text=date_str, callback_data=f"date_{date_str}")
             for date_str in date_strings
         ]
 
         # Группируем по 4 кнопки в строку
         rows = [buttons[i:i + 3] for i in range(0, len(buttons), 3)]
-
 
         # Создаем клавиатуру из списка списков словарей
         keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
@@ -163,16 +157,15 @@ async def date_chosen(callback_query: types.CallbackQuery, state: FSMContext):
         booked_times = await get_booked_times(appointment_date)  # вызов API /get_booked_times
 
         buttons = [
-                InlineKeyboardButton(text=time_str, callback_data=f"time_{time_str}")
-                for time_str in booked_times
-            ]
+            InlineKeyboardButton(text=time_str, callback_data=f"time_{time_str}")
+            for time_str in booked_times
+        ]
 
         # Группируем по 4 кнопки в строку
         rows = [buttons[i:i + 4] for i in range(0, len(buttons), 4)]
 
         # Создаем клавиатуру
         keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
-
 
         await callback_query.message.edit_text("Выберите время:", reply_markup=keyboard)
         await state.set_state(BookingStates.waiting_for_time)
@@ -193,13 +186,12 @@ async def time_chosen(callback_query: types.CallbackQuery, state: FSMContext):
         service_id = user_data.get('service_id')
         appointment_date = user_data.get('appointment_date').strftime("%d.%m.%Y")
 
-
         success = await ApplicationDAO.add_appointment_if_available(client_name=name,
-            service_id=service_id,
-            appointment_date=datetime.strptime(appointment_date, "%d.%m.%Y").date(),
-            appointment_time=appointment_time,
-            user_id=user_id)
-
+                                                                    service_id=service_id,
+                                                                    appointment_date=datetime.strptime(appointment_date,
+                                                                                                       "%d.%m.%Y").date(),
+                                                                    appointment_time=appointment_time,
+                                                                    user_id=user_id)
 
         if success:
             # Отправить подтверждение пользователю и админу

@@ -25,7 +25,7 @@ async def get_token(request: Request, authorization: Optional[str] = Header(None
         return authorization[len("Bearer "):]
 
     # Если токена в заголовке нет, попробуем из cookies
-    token = request.cookies.get("summary_information_access_token")
+    token = request.cookies.get("access_token")
     if token:
         return token
     token = await login_via_telegram(authorization)

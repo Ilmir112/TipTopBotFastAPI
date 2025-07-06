@@ -66,10 +66,12 @@ async def login_user(response: Response, user_data: SUsersAuth):
     if not user:
         raise IncorectLoginOrPassword
     access_token = create_access_token({"sub": str(user.id)})
-    response.set_cookie("summary_information_access_token", access_token, httponly=True)
+    response.set_cookie("access_token", access_token, httponly=True)
 
-    return {"login_user": user.login_user,
-            "access_token": access_token}
+    return {
+        "login_user": user.login_user,
+        "access_token": access_token
+    }
 
 @router.post("/logout")
 async def logout_user(response: Response):

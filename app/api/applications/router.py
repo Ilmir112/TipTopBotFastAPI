@@ -4,12 +4,14 @@ from fastapi import APIRouter, Depends
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from app.api.applications.schemas import AppointmentData
+from app.api.service.dao import ServiceDAO
 from app.bot.create_bot import bot
 from app.api.applications.dao import ApplicationDAO
 from app.bot.handlers.user_router import check_admin
 from app.bot.keyboards.kbs import main_keyboard, applications_list_keyboard
 from app.config import settings
 from app.logger import logger
+
 
 router = APIRouter(prefix='/api', tags=['API'])
 
@@ -38,16 +40,21 @@ async def get_applications_all():
 
 @router.post('/add')
 async def add_appointment(data: AppointmentData):
-    return ApplicationDAO.add(
-        name=data.name,
-        service=int(data.service),
-        appointment_date=data.appointment_date,
-        appointment_time=data.appointment_time,
-        user_id=data.user_id)
-
+    try:
+        service = ServiceDAO.find_all(service_name=data.service_name)
+        if service:
+            return await ApplicationDAO.add(
+                client_name=data.name,
+                service_id=service.service_id,
+                appointment_date=data.appointment_date,
+                appointment_time=data.appointment_time,
+                user_id=data.user_id)
+    except Exception as e:
+        print(e)
 
 @router.post("/appointment", response_class=JSONResponse)
 async def create_appointment(request: Request):
+    from app.main import router_rabbit
     # Получаем и валидируем JSON данные
     data = await request.json()
 
@@ -89,7 +96,9 @@ async def create_appointment(request: Request):
         f"⏰ Время: {validated_data.appointment_time}"
 
     )
-
+    await router_rabbit.broker.publish(
+        admin_message, queue="application"
+    )
     if validated_data.user_id:
         kb = main_keyboard(user_id=validated_data.user_id, first_name=validated_data.name, has_phone=True)
     # Отправка сообщений через бота

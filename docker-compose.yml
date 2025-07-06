@@ -1,0 +1,89 @@
+# docker compose build - используем эту команду, если меняли что-то в Dockerfile
+# docker compose up - если изменили только docker-compose
+
+
+services:
+#  db:
+#    image: postgres:15
+#    container_name: zima_data
+#    environment:
+#      POSTGRES_PASSWORD: 195375AsD+
+#    volumes:
+#      - postgresdata:/var/lib/postgresql/data
+#    env_file: # Файл с переменными окружения (Вместо environment)
+#      - .env-non-dev
+#    ports:
+#      - 5433:5432 # Порт нужен, только если нам нужен доступ к контейнеру напрямую
+
+  redis:
+    image: redis:7
+    container_name: redis
+
+  tip_top:
+    image: image
+    restart: always
+    build:
+      context: app
+    container_name: app
+    env_file:
+      - .env
+    depends_on: # Запускаем только после запуска БД и Redis (depends on = зависит от)
+#      - db
+      - redis
+    # Если не работает эта команда, используйте закомментированную
+    # command: ["/zimaApp/docker/zimaApp.sh"]
+#    command: sh -c "alembic upgrade head && gunicorn app.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind=0.0.0.0:8000"
+    ports:
+      - 8000:8000
+
+#  celery:
+#    image: zima_celery
+#    build:
+#      context: app # celery это библиотека, у неё нет образа, берём из основного билда
+#    container_name: zima_celery
+#    # Если не работает эта команда, используйте закомментированную
+##    command: ["/zimaApp/docker/celery.sh", "celery"] # Второй аргумен для if/elif в скрипте
+#    command: sh -c "celery --app=zimaApp.tasks.celery_app:celery_app worker -l INFO"
+#    env_file:
+#      - .env-non-dev
+#    depends_on:
+#      - redis
+
+#  flower:
+#    image: zima_flower
+#    build:
+#      context: app # flower это библиотека, у неё нет образа, берём из основного билда
+#    container_name: zima_flower
+#    # Если не работает эта команда, используйте закомментированную
+##    command: ["/docker/celery.sh", "flower"]
+#    command: sh -c "celery --app=zimaApp.tasks.celery_app:celery_app flower"
+#    env_file:
+#      - .env-non-dev
+#    depends_on:
+#      - redis
+#    ports:
+#      - 5555:5555
+#
+#  prometheus:
+#    image: prom/prometheus:v2.43.0
+#    container_name: prometheus
+#    volumes:
+#      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+#      - prometheusdata:/prometheus
+#    restart: unless-stopped
+#    ports:
+#      - 9090:9090
+#
+#  grafana:
+#    image: grafana/grafana:9.4.7
+#    container_name: grafana
+#    volumes:
+#      - grafanadata:/var/lib/grafana
+#    restart: unless-stopped
+#    ports:
+#      - 3000:3000
+#
+#volumes:
+#  postgresdata:
+#  grafanadata:
+#  prometheusdata:

@@ -1,7 +1,7 @@
 import logging
 from datetime import date, datetime
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
@@ -61,9 +61,13 @@ async def add_service_data(
         user: Users = Depends(get_current_user)):
     try:
         service = await ServiceDAO.find_one_or_none(service_name=service_data.service_name)
-        if service is None:
-            result = await ServiceDAO.add(service_name=service_data.service_name,
-                                          time_work=service_data.time_work)
+        if service:
+            # Уже существует — вернуть ошибку
+            raise HTTPException(status_code=409, detail="Service already exists")
+
+        result = await ServiceDAO.add(service_name=service_data.service_name,
+                                      time_work=service_data.time_work)
+        if result:
             return result
     except SQLAlchemyError as db_err:
         msg = f'Database Exception Brigade {db_err}'
