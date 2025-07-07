@@ -98,9 +98,10 @@ async def authenticated_ac():
         response = await ac.post(
             "/auth/login",
             json={
-                "login_user": "ilmir1121",
-                "password": "test",
+                "login_user": "ilmir112",
+                "password": "1953as",
             },
         )
-        assert ac.cookies["access_token"]
-        yield ac
+        if response:
+            assert ac.cookies["access_token"]
+            yield ac

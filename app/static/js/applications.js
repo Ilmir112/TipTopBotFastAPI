@@ -54,3 +54,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+document.getElementById('date-filter').addEventListener('change', function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const adminId = urlParams.get('admin_id'); //
+            // Можно вставить его в скрытое поле формы
+            document.querySelector('input[name="admin_id"]').value = adminId;
+            // При выборе даты отправляем форму
+            this.form.submit();
+        });

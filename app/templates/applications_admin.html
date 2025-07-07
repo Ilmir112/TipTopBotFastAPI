@@ -8,8 +8,18 @@
 {% endblock %}
 
 {% block content %}
+
     <main>
         <h1>{{ title_h1 }}</h1>
+
+        <form method="get" action="" id="date-form">
+            <!-- Передайте admin_id как целое число -->
+            <input type="hidden" name="admin_id" value="{{ user_id }}">
+            <label for="date-filter">Выберите дату:</label>
+            <input type="date" id="date-filter" name="date" value="{{ selected_date or '' }}">
+        </form>
+
+
 
         {% if access %}
             <table id="appointments-table">
@@ -20,7 +30,7 @@
                     <th>имя</th>
                     <th>номер телефона</th>
                     <th>Услуга</th>
-                    <th> </th>
+                    <th></th>
 
                 </tr>
                 </thead>
@@ -47,4 +57,5 @@
 {% endblock %}
 {% block scripts %}
     <script src="/static/js/applications.js"></script>
+
 {% endblock %}

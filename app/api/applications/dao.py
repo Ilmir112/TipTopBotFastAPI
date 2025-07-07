@@ -29,8 +29,6 @@ class ApplicationDAO(BaseDAO):
             result = await session.execute(query)
             return result.scalars().all()
 
-    # Здесь должна быть логика получения данных из базы
-    # Для примера возвращаем статичный список
 
     @classmethod
     async def is_time_available(cls, appointment_date, appointment_time):
@@ -91,7 +89,6 @@ class ApplicationDAO(BaseDAO):
                 if result:
                     applications = result.scalars().all()
 
-
                     # Возвращаем список словарей с нужными полями
                     return [
                         {
@@ -108,7 +105,7 @@ class ApplicationDAO(BaseDAO):
                 return None
 
     @classmethod
-    async def get_all_applications(cls):
+    async def get_all_applications(cls, date):
         """
         Возвращает все заявки в базе данных с дополнительной информацией о мастере и услуге.
 
@@ -121,7 +118,10 @@ class ApplicationDAO(BaseDAO):
                 query = (
                     select(cls.model)
                     .options(joinedload(cls.model.service), joinedload(cls.model.user))
-                    .where(cls.model.appointment_date >= datetime.now().date() - timedelta(days=1))
+                    .where(cls.model.appointment_date == date)
+                    .order_by(
+                        cls.model.appointment_date.asc(),
+                        cls.model.appointment_time.asc())
                 )
                 result = await session.execute(query)
                 applications = result.scalars().all()

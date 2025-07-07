@@ -7,7 +7,7 @@ from faststream.rabbit import RabbitBroker
 from pydantic import ValidationError, ConfigDict
 from pydantic_settings import BaseSettings
 
-from app.logger import logger
+# from app.logger import logger
 
 
 class Settings(BaseSettings):
@@ -83,9 +83,9 @@ try:
     # Создайте экземпляр класса Settings
     settings = Settings()
     log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log.txt")
-    logger.add(log_file_path, format=settings.FORMAT_LOG, level="INFO", rotation=settings.LOG_ROTATION)
-    broker = RabbitBroker(url=settings.rabbitmq_url)
-    scheduler = AsyncIOScheduler(jobstores={'default': SQLAlchemyJobStore(url=settings.STORE_URL)})
+    # logger.add(log_file_path, format=settings.FORMAT_LOG, level="INFO", rotation=settings.LOG_ROTATION)
+    # broker = RabbitBroker(url=settings.rabbitmq_url)
+    # scheduler = AsyncIOScheduler(jobstores={'default': SQLAlchemyJobStore(url=settings.STORE_URL)})
 
     # Для проверки
 except ValidationError as e:

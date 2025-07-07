@@ -1,4 +1,4 @@
-import logging
+from app.logger import logger
 from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -27,9 +27,18 @@ async def find_service_by_id(
 
 @router.get("/find_all")
 async def find_service_all(user: Users = Depends(get_current_user)):
-    result = await ServiceDAO.find_all()
+    try:
+        result = await ServiceDAO.find_all()
+        return result
+    except SQLAlchemyError as db_err:
+        msg = f"Database error during find_all: {db_err}"
+        logger.error(msg, exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+    except Exception as e:
+        msg = f"Unexpected error during find_all: {str(e)}"
+        logger.error(msg, exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
 
-    return result
 
 
 @router.put("/update_by_id")
@@ -39,7 +48,6 @@ async def update_service_data(service_name: str, time_work: int,
 ):
 
     try:
-
         result = await ServiceDAO.update(
                 {"service_id": service_id},
                 service_name=service_name,
@@ -48,11 +56,11 @@ async def update_service_data(service_name: str, time_work: int,
         return result
     except SQLAlchemyError as db_err:
         msg = f'Database Exception Brigade {db_err}'
-        logging.error(msg, extra={"service_name": service_name}, exc_info=True)
+        logger.error(msg, extra={"service_name": service_name}, exc_info=True)
 
     except Exception as e:
         msg = f'Unexpected error: {str(e)}'
-        logging.error(msg, extra={"service_name": service_name}, exc_info=True)
+        logger.error(msg, extra={"service_name": service_name}, exc_info=True)
 
 
 @router.post("/add")
@@ -61,6 +69,7 @@ async def add_service_data(
         user: Users = Depends(get_current_user)):
     try:
         service = await ServiceDAO.find_one_or_none(service_name=service_data.service_name)
+
         if service:
             # Уже существует — вернуть ошибку
             raise HTTPException(status_code=409, detail="Service already exists")
@@ -71,14 +80,24 @@ async def add_service_data(
             return result
     except SQLAlchemyError as db_err:
         msg = f'Database Exception Brigade {db_err}'
-        logging.error(msg, extra={"service_data": service_data.service_name}, exc_info=True)
+        logger.error(msg, extra={"service_data": service_data.service_name}, exc_info=True)
     except Exception as e:
         msg = f'Unexpected error: {str(e)}'
-        logging.error(msg, extra={"service_data": service_data.service_name}, exc_info=True)
+        logger.error(msg, extra={"service_data": service_data.service_name}, exc_info=True)
 
 @router.delete("/remove")
 async def remove_service_data(service_id: int, user: Users = Depends(get_current_user)):
-    result = await ServiceDAO.delete(service_id=service_id)
-    return result
-    
+    try:
+        result = await ServiceDAO.delete(service_id=service_id)
+        return result
+    except SQLAlchemyError as db_err:
+        msg = f"Database error during remove_service_data: {db_err}"
+        logger.error(msg, exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+    except Exception as e:
+        msg = f"Unexpected error during remove_service_data: {str(e)}"
+        logger.error(msg, exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
 

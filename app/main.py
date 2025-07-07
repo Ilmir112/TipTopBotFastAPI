@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
-
+import asyncio
+from aiogram.exceptions import TelegramRetryAfter
 import uvicorn
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware.cors import CORSMiddleware
@@ -56,9 +57,14 @@ async def lifespan(app: FastAPI):
     # Запуск планировщика задач
     await start_scheduler()
 
+    # Установка webhook с обработкой ошибок и задержками
+    await set_webhook_with_retry(webhook_url)
+
     await bot.set_webhook(url=webhook_url,
                           allowed_updates=dp.resolve_used_update_types(),
                           drop_pending_updates=True)
+
+
     logging.info(f"Webhook set to {webhook_url}")
     yield
     logging.info("Shutting down bot...")
@@ -66,7 +72,24 @@ async def lifespan(app: FastAPI):
     await stop_bot()
     logging.info("Webhook deleted")
 
-router_rabbit = RabbitRouter()
+
+
+
+async def set_webhook_with_retry(webhook_url):
+    retry_delay = 1
+    while True:
+        try:
+            await bot.set_webhook(
+                url=webhook_url,
+                allowed_updates=dp.resolve_used_update_types(),
+                drop_pending_updates=True
+            )
+            break  # успешно установлено
+        except TelegramRetryAfter as e:
+            logging.warning(f"Webhook rate limit exceeded. Retrying in {e.retry_after} seconds.")
+            await asyncio.sleep(e.retry_after)
+
+# router_rabbit = RabbitRouter()
 app = FastAPI(lifespan=lifespan)
 
 app.mount('/static', StaticFiles(directory='app/static'), 'static')
@@ -114,7 +137,7 @@ app.include_router(router_service)
 app.include_router(router_working_day)
 app.include_router(router_applications)
 app.include_router(router_users)
-app.include_router(router_rabbit)
+# app.include_router(router_rabbit)
 
 origins = [
     "http://localhost:3000"

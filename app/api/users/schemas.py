@@ -1,12 +1,11 @@
 from pydantic import BaseModel, Field, ConfigDict
-from datetime import date, time
 
 
 # Модель для валидации данных
 class SUsers(BaseModel):
     first_name: str = Field(..., min_length=2, max_length=50, description="Полное имя")
     username: str = Field(..., min_length=2, max_length=50, description="Сокращенное имя")
-    telephone_number: str = Field(..., min_length=2, max_length=50, description="Дата назначения")  # Переименовал поле
+    telephone_number: str = Field(..., min_length=2, max_length=50, description="номер телефона")  # Переименовал поле
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
 

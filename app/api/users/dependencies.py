@@ -18,6 +18,7 @@ from app.api.users.dao import UsersDAO, SuperUsersDAO
 from app.api.users.models import Users
 
 
+
 async def get_token(request: Request, authorization: Optional[str] = Header(None)):
 
     # Попытка получить токен из заголовка Authorization
@@ -48,12 +49,12 @@ async def get_current_user(token: str = Depends(get_token)):
     user_id: str = payload.get("sub")
     if not user_id:
         raise UserAlreadyExistsException
+    if user_id is None:
+        user_id = await SuperUsersDAO.find_one_or_none_by_id(int(user_id))
+        if not user_id:
+            raise UserAlreadyExistsException
 
-    user = await SuperUsersDAO.find_one_or_none_by_id(int(user_id))
-    if not user:
-        raise UserAlreadyExistsException
-
-    return user
+    return user_id
 
 # Новая функция для входа через Telegram
 async def login_via_telegram(telegram_id: int):

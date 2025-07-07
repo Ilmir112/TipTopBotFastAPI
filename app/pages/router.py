@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi import APIRouter
 
 from fastapi.templating import Jinja2Templates
@@ -15,8 +17,6 @@ from app.config import settings
 
 router = APIRouter(prefix='', tags=['Фронтенд'])
 templates = Jinja2Templates(directory='app/templates')
-
-
 # templates = Jinja2Templates(directory='templates')
 
 
@@ -65,13 +65,24 @@ async def find_all_service():
 
 @router.get("/admin_telegram", response_class=HTMLResponse)
 async def read_root(request: Request, admin_id: int = None):
-    data_page = {"request": request, "access": False, 'title_h1': "Панель администратора"}
+    selected_date_str = request.query_params.get('date')
+    if selected_date_str:
+        selected_date = date.fromisoformat(selected_date_str)
+    else:
+        selected_date = date.today()
+        selected_date_str = selected_date.isoformat()
+    data_page = {
+        "request": request,
+        "access": False,
+        'title_h1': "Панель администратора",
+        "selected_date": selected_date_str
+    }
     if admin_id is None or admin_id not in settings.ADMIN_LIST:
         data_page['message'] = 'У вас нет прав для получения информации о заявках!'
         return templates.TemplateResponse("applications.html", data_page)
     else:
         data_page['access'] = True
-        data_page['applications'] = await ApplicationDAO.get_all_applications()
+        data_page['applications'] = await ApplicationDAO.get_all_applications(selected_date)
         return templates.TemplateResponse("applications_admin.html", data_page)
 
 

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field, ConfigDict
-from datetime import date, time
+from datetime import date
 
 
 # Модель для валидации данных
