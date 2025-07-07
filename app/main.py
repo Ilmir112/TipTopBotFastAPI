@@ -68,26 +68,38 @@ async def lifespan(app: FastAPI):
     logging.info(f"Webhook set to {webhook_url}")
     yield
     logging.info("Shutting down bot...")
-    await bot.delete_webhook()
+    # await bot.delete_webhook()
     await stop_bot()
     logging.info("Webhook deleted")
 
 
-
-
 async def set_webhook_with_retry(webhook_url):
-    retry_delay = 1
-    while True:
-        try:
-            await bot.set_webhook(
-                url=webhook_url,
-                allowed_updates=dp.resolve_used_update_types(),
-                drop_pending_updates=True
-            )
-            break  # успешно установлено
-        except TelegramRetryAfter as e:
-            logging.warning(f"Webhook rate limit exceeded. Retrying in {e.retry_after} seconds.")
-            await asyncio.sleep(e.retry_after)
+    try:
+        info = await bot.get_webhook_info()
+        # Проверяем, установлен ли уже нужный webhook
+        if info.url == webhook_url:
+            logging.info("Webhook уже установлен на нужный URL.")
+            return
+        elif info.url:
+            # Если webhook уже установлен на другой URL, удаляем его перед установкой нового
+            await bot.delete_webhook()
+            logging.info("Удалили существующий webhook перед установкой нового.")
+    except Exception as e:
+        logging.warning(f"Ошибка при получении информации о webhook: {e}")
+
+# async def set_webhook_with_retry(webhook_url):
+#     retry_delay = 1
+#     while True:
+#         try:
+#             await bot.set_webhook(
+#                 url=webhook_url,
+#                 allowed_updates=dp.resolve_used_update_types(),
+#                 drop_pending_updates=True
+#             )
+#             break  # успешно установлено
+#         except TelegramRetryAfter as e:
+#             logging.warning(f"Webhook rate limit exceeded. Retrying in {e.retry_after} seconds.")
+#             await asyncio.sleep(e.retry_after)
 
 # router_rabbit = RabbitRouter()
 app = FastAPI(lifespan=lifespan)
