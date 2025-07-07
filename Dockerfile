@@ -10,10 +10,7 @@ RUN pip install --upgrade pip
 
 RUN pip install -r requirements.txt
 
-COPY ./app ./app
-
-# Укажите команду для запуска приложения
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+COPY . .
 
 # КОММЕНТАРИЙ НИЖЕ ТОЛЬКО ДЛЯ DOCKER COMPOSE. РАСКОММЕНТИРУЙТЕ КОД, ЕСЛИ ВЫ ИСПОЛЬЗУЕТЕ ТОЛЬКО DOCKERFILE
 # Предоставляет доступ контейнеру для запуска bash скрипта, если это необходимо
@@ -27,4 +24,5 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
 
 # КОММЕНТАРИЙ НИЖЕ ТОЛЬКО ДЛЯ DOCKER COMPOSE. РАСКОММЕНТИРУЙТЕ КОД, ЕСЛИ ВЫ ИСПОЛЬЗУЕТЕ ТОЛЬКО DOCKERFILE
 # Эта команда также выведена в bash скрипт
-# CMD ["python3", "-u", "main.py"]
+# CMD ["gunicorn", "app.main:app", "--workers", "2", "--worker-class", "uvicorn.workers.UvicornWorker", "--bind=0.0.0.0:8443"]
+ CMD ["gunicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
