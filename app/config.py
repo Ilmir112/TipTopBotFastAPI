@@ -74,7 +74,7 @@ class Settings(BaseSettings):
     TOKEN: str
     CHAT_ID: str
 
-    model_config = ConfigDict(env_file = ".env")
+    model_config = ConfigDict(env_file = ".env-non-dev")
     # model_config = ConfigDict(env_file = '../.env')
 
 
