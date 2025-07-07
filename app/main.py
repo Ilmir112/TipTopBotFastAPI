@@ -17,6 +17,7 @@ from app.bot.handlers.send_message import send_reminders
 from app.bot.handlers.user_router import user_router
 from app.config import settings
 from app.database import engine
+from app.logger import logger
 from app.pages.router import router as router_pages
 from app.api.applications.router import router as router_applications
 from app.api.users.router import router as router_users
@@ -56,19 +57,26 @@ async def lifespan(app: FastAPI):
     await start_scheduler()
 
     webhook_url = settings.get_webhook_url()
+    try:
+        await bot.delete_webhook()  # удаляем старый webhook, если есть
 
+        await bot.set_webhook(url=webhook_url,
+                              allowed_updates=dp.resolve_used_update_types(),
+                              drop_pending_updates=True)
 
+        await bot.set_webhook(webhook_url)
+        print("Webhook установлен")
 
-    await bot.set_webhook(url=webhook_url,
-                          allowed_updates=dp.resolve_used_update_types(),
-                          drop_pending_updates=True)
+    except Exception as e:
+        print(f"Ошибка установки webhook: {e}")
 
-    logging.info(f"Webhook set to {webhook_url}")
+    logger.info(f"Webhook set to {webhook_url}")
     yield
-    logging.info("Shutting down bot...")
+    logger.info("Shutting down bot...")
     await bot.delete_webhook()
     await stop_bot()
-    logging.info("Webhook deleted")
+    logger.info("Webhook deleted")
+
 
 # router_rabbit = RabbitRouter()
 app = FastAPI(lifespan=lifespan)
