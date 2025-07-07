@@ -17,7 +17,6 @@ from app.bot.handlers.send_message import send_reminders
 from app.bot.handlers.user_router import user_router
 from app.config import settings
 from app.database import engine
-from app.logger import logger
 from app.pages.router import router as router_pages
 from app.api.applications.router import router as router_applications
 from app.api.users.router import router as router_users
@@ -28,18 +27,16 @@ from fastapi.staticfiles import StaticFiles
 from aiogram.types import Update
 from fastapi import FastAPI, Request
 from sqladmin import Admin
-from faststream.rabbit.fastapi import RabbitRouter
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-# Импортируйте ваши роутеры, функции и переменные тут
-# from your_module import user_router, admin_router, start_bot, stop_bot, send_reminders_wrapper, bot, dp, settings
+
 
 scheduler = AsyncIOScheduler()
 
 
 async def start_scheduler():
-    scheduler.add_job(send_reminders, 'interval', hours=1)
+    scheduler.add_job(send_reminders, 'interval', minutes=1)
     scheduler.start()
 
 
@@ -52,37 +49,26 @@ async def lifespan(app: FastAPI):
     dp.include_router(user_router)
     dp.include_router(admin_router)
     await start_bot()
+    webhook_url = settings.get_webhook_url()
 
     # Запуск планировщика задач
     await start_scheduler()
 
-    webhook_url = settings.get_webhook_url()
-    try:
-        await bot.delete_webhook()  # удаляем старый webhook, если есть
-
-        await bot.set_webhook(url=webhook_url,
-                              allowed_updates=dp.resolve_used_update_types(),
-                              drop_pending_updates=True)
-
-        await bot.set_webhook(webhook_url)
-        print("Webhook установлен")
-
-    except Exception as e:
-        print(f"Ошибка установки webhook: {e}")
-
-    logger.info(f"Webhook set to {webhook_url}")
+    await bot.set_webhook(url=webhook_url,
+                          allowed_updates=dp.resolve_used_update_types(),
+                          drop_pending_updates=True)
+    logging.info(f"Webhook set to {webhook_url}")
     yield
-    logger.info("Shutting down bot...")
+    logging.info("Shutting down bot...")
     await bot.delete_webhook()
     await stop_bot()
-    logger.info("Webhook deleted")
+    logging.info("Webhook deleted")
 
 
-# router_rabbit = RabbitRouter()
 app = FastAPI(lifespan=lifespan)
 
-app.mount('/static', StaticFiles(directory='app/static'), 'static')
-# app.mount('/static', StaticFiles(directory='static'), 'static')
+# app.mount('/static', StaticFiles(directory='app/static'), 'static')
+app.mount('/static', StaticFiles(directory='static'), 'static')
 
 
 @app.post("/webhook")
@@ -126,7 +112,6 @@ app.include_router(router_service)
 app.include_router(router_working_day)
 app.include_router(router_applications)
 app.include_router(router_users)
-# app.include_router(router_rabbit)
 
 origins = [
     "http://localhost:3000"
