@@ -1,7 +1,6 @@
 import logging
 from contextlib import asynccontextmanager
-import asyncio
-from aiogram.exceptions import TelegramRetryAfter
+
 import uvicorn
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware.cors import CORSMiddleware
@@ -18,7 +17,6 @@ from app.bot.handlers.send_message import send_reminders
 from app.bot.handlers.user_router import user_router
 from app.config import settings
 from app.database import engine
-from app.logger import logger
 from app.pages.router import router as router_pages
 from app.api.applications.router import router as router_applications
 from app.api.users.router import router as router_users
@@ -53,69 +51,24 @@ async def lifespan(app: FastAPI):
     dp.include_router(user_router)
     dp.include_router(admin_router)
     await start_bot()
-    webhook_url = settings.get_webhook_url()
-    try:
-        await bot.set_webhook(url=webhook_url)
-        logger.info(f"Webhook установлен на {webhook_url}")
-    except TelegramRetryAfter as e:
-        wait_time = 5
-        logger.warning(f"Превышен лимит Telegram API для set_webhook. Повтор через {wait_time} секунд.")
-        await asyncio.sleep(wait_time)
-        # Можно попробовать снова установить webhook после задержки
-        try:
-            await bot.set_webhook(url=webhook_url)
-            logger.info(f"Webhook успешно установлен после задержки.")
-        except Exception as e:
-            logger.error(f"Не удалось установить webhook после задержки: {e}")
-    except Exception as e:
-        logger.error(f"Ошибка при установке webhook: {e}")
 
     # Запуск планировщика задач
     await start_scheduler()
 
-    # Установка webhook с обработкой ошибок и задержками
-    await set_webhook_with_retry(webhook_url)
+    webhook_url = settings.get_webhook_url()
+
+
 
     await bot.set_webhook(url=webhook_url,
                           allowed_updates=dp.resolve_used_update_types(),
                           drop_pending_updates=True)
 
-
     logging.info(f"Webhook set to {webhook_url}")
     yield
     logging.info("Shutting down bot...")
-    # await bot.delete_webhook()
+    await bot.delete_webhook()
     await stop_bot()
     logging.info("Webhook deleted")
-
-
-async def set_webhook_with_retry(webhook_url):
-    try:
-        info = await bot.get_webhook_info()
-        # Проверяем, установлен ли уже нужный webhook
-        if info.url == webhook_url:
-            logging.info("Webhook уже установлен на нужный URL.")
-            return
-        elif info.url:
-            # Если webhook уже установлен на другой URL, удаляем его перед установкой нового
-            await bot.delete_webhook()
-            logging.info("Удалили существующий webhook перед установкой нового.")
-    except Exception as e:
-        logging.warning(f"Ошибка при получении информации о webhook: {e}")
-
-# async def set_webhook_with_retry(webhook_url):
-#     retry_delay = 1
-#     while True:
-#         try:
-#             await bot.set_webhook(
-#                 url=webhook_url,
-#                 allowed_updates=dp.resolve_used_update_types(),
-#                 drop_pending_updates=True
-#             )
-#             break  # успешно установлено
-#         except TelegramRetryAfter as e:
-#             logging.warning(f"Webhook rate limit exceeded. Retrying in {e.retry_after} seconds.")
-#             await asyncio.sleep(e.retry_after)
 
 # router_rabbit = RabbitRouter()
 app = FastAPI(lifespan=lifespan)

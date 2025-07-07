@@ -26,7 +26,7 @@ services:
       context: .
     container_name: app
     env_file:
-      - .env-non-dev
+      - .env
     depends_on: # Запускаем только после запуска БД и Redis (depends on = зависит от)
 #      - db
       - redis
