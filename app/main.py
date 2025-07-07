@@ -18,6 +18,7 @@ from app.bot.handlers.send_message import send_reminders
 from app.bot.handlers.user_router import user_router
 from app.config import settings
 from app.database import engine
+from app.logger import logger
 from app.pages.router import router as router_pages
 from app.api.applications.router import router as router_applications
 from app.api.users.router import router as router_users
@@ -53,6 +54,21 @@ async def lifespan(app: FastAPI):
     dp.include_router(admin_router)
     await start_bot()
     webhook_url = settings.get_webhook_url()
+    try:
+        await bot.set_webhook(url=webhook_url)
+        logger.info(f"Webhook установлен на {webhook_url}")
+    except TelegramRetryAfter as e:
+        wait_time = 5
+        logger.warning(f"Превышен лимит Telegram API для set_webhook. Повтор через {wait_time} секунд.")
+        await asyncio.sleep(wait_time)
+        # Можно попробовать снова установить webhook после задержки
+        try:
+            await bot.set_webhook(url=webhook_url)
+            logger.info(f"Webhook успешно установлен после задержки.")
+        except Exception as e:
+            logger.error(f"Не удалось установить webhook после задержки: {e}")
+    except Exception as e:
+        logger.error(f"Ошибка при установке webhook: {e}")
 
     # Запуск планировщика задач
     await start_scheduler()
