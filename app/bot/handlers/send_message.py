@@ -6,6 +6,7 @@ from app.api.applications.router import get_applications_all
 from app.bot.create_bot import bot
 
 
+
 async def send_reminders():
     # Часовой пояс Екатеринбурга
     ekaterinburg_tz = pytz.timezone('Asia/Yekaterinburg')
@@ -13,31 +14,36 @@ async def send_reminders():
     # Получить текущее время в Екатеринбурге
     now = datetime.now(ekaterinburg_tz)
 
-    # Получаем все заявки
-    applications = await get_applications_all()
+    # Получаем все заявки с предварительной загрузкой связанного service
+    applications = await get_applications_all()  # Предполагается, что внутри этой функции используется joinedload для app.service
+
+    # Получить текущее время для сравнения (чтобы не вызывать много раз)
+    now_time = datetime.now(ekaterinburg_tz).time()
 
     for app in applications:
-        # Проверяем условия для напоминания
+        # Объединяем дату и время записи
         appointment_datetime = datetime.combine(app.appointment_date, app.appointment_time)
-        # Актуализируем его в нужный часовой пояс
         appointment_datetime = ekaterinburg_tz.localize(appointment_datetime)
 
         delta = appointment_datetime - now
 
-        # Напоминание за 24 часа
-        if timedelta(hours=23, minutes=00) < delta <= timedelta(hours=24, minutes=30):
+        # Напоминание за 24 часа (примерно)
+        if timedelta(hours=23) <= delta <= timedelta(hours=24, minutes=30):
             user_id = app.user_id
-            message = (f"🔔✨ Напоминание: у вас запланирована запись на услугу {app.service} 🛎️\n"
-                       f"📅 Дата: {app.appointment_date} 🗓️\n"
-                       f"🕒 Время: {app.appointment_time.strftime('%H:%M')}. ⏰")
+            message = (
+                f"🔔✨ Напоминание: у вас запланирована запись на услугу {app.service.name} 🛎️\n"
+                f"📅 Дата: {app.appointment_date.strftime('%d.%m.%Y')} 🗓️\n"
+                f"🕒 Время: {app.appointment_time.strftime('%H:%M')}. ⏰"
+            )
             await bot.send_message(user_id, message)
 
         # Напоминание в 8 утра в день записи
         if app.appointment_date == now.date():
-            # Проверяем время сейчас и время записи
-            now_time = datetime.now(ekaterinburg_tz).time()
-            if now_time >= time(7, 59) and now_time <= time(8, 10):  # например, в первые минуты после 8 утра
+            # Проверяем время сейчас — примерно между 07:59 и 08:10
+            if time(7, 59) <= now_time <= time(8, 10):
                 user_id = app.user_id
-                message = (f"🌅 Доброе утро! ☀️ Напоминаем о вашей записи сегодня "
-                           f"в {app.appointment_time.strftime('%H:%M')}📅🕒 на услугу {app.service} 🛎️")
+                message = (
+                    f"🌅 Доброе утро! ☀️ Напоминаем о вашей записи сегодня "
+                    f"в {app.appointment_time.strftime('%H:%M')} 📅🕒 на услугу {app.service.name} 🛎️"
+                )
                 await bot.send_message(user_id, message)
