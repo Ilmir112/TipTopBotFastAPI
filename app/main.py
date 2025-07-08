@@ -57,7 +57,7 @@ async def lifespan(app: FastAPI):
     # Запуск планировщика задач
     await start_scheduler()
 
-    setup_webhook(webhook_url)
+    await setup_webhook(webhook_url)
 
     logging.info(f"Webhook set to {webhook_url}")
     yield
