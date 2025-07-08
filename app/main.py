@@ -1,6 +1,8 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
+import aiogram
 import uvicorn
 from fastapi.exceptions import RequestValidationError
 from starlette.middleware.cors import CORSMiddleware
@@ -55,9 +57,8 @@ async def lifespan(app: FastAPI):
     # Запуск планировщика задач
     await start_scheduler()
 
-    await bot.set_webhook(url=webhook_url,
-                          allowed_updates=dp.resolve_used_update_types(),
-                          drop_pending_updates=True)
+    setup_webhook(webhook_url)
+
     logging.info(f"Webhook set to {webhook_url}")
     yield
     logging.info("Shutting down bot...")
@@ -65,6 +66,22 @@ async def lifespan(app: FastAPI):
     await stop_bot()
     logging.info("Webhook deleted")
 
+async def setup_webhook(webhook_url):
+    try:
+        # Проверяем текущий статус webhook
+        info = await bot.get_webhook_info()
+        if info.url != webhook_url:
+            await bot.set_webhook(url=webhook_url)
+            print("Webhook установлен.")
+        else:
+            print("Webhook уже установлен.")
+    except aiogram.exceptions.TelegramRetryAfter as e:
+        wait_time = int(e.retry_after)
+        print(f"Превышен лимит запросов. Повтор через {wait_time} секунд.")
+        await asyncio.sleep(wait_time)
+        await setup_webhook(webhook_url)
+    except Exception as e:
+        print(f"Ошибка при установке webhook: {e}")
 
 app = FastAPI(lifespan=lifespan)
 
