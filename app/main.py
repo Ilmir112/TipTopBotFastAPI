@@ -19,6 +19,7 @@ from app.bot.handlers.send_message import send_reminders
 from app.bot.handlers.user_router import user_router
 from app.config import settings
 from app.database import engine
+from app.logger import logger
 from app.pages.router import router as router_pages
 from app.api.applications.router import router as router_applications
 from app.api.users.router import router as router_users
@@ -91,10 +92,11 @@ app.mount('/static', StaticFiles(directory='app/static'), 'static')
 
 @app.post("/webhook")
 async def webhook(request: Request) -> None:
-    logging.info("Received webhook request")
+    body = await request.body()
+    logger.info(f"Received webhook request: {body}")
     update = Update.model_validate(await request.json(), context={"bot": bot})
     await dp.feed_update(bot, update)
-    logging.info("Update processed")
+    logger.info("Update processed")
 
 
 @app.exception_handler(RequestValidationError)

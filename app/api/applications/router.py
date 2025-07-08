@@ -35,7 +35,8 @@ async def get_booked_times(appointment_date: date):
 async def get_applications_all():
     try:
         applications_list = await ApplicationDAO.find_all()
-        return applications_list
+        if applications_list:
+            return applications_list
     except Exception as e:
         logger.error(f"Error fetching applications: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
