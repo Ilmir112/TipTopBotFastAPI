@@ -29,12 +29,12 @@ class Settings(BaseSettings):
         """Возвращает URL вебхука с кодированием специальных символов."""
         return f"{self.BASE_SITE}/webhook"
 
-    @property
-    def rabbitmq_url(self) -> str:
-        return (
-            f"amqp://{self.RABBITMQ_USERNAME}:{quote(self.RABBITMQ_PASSWORD)}@"
-            f"{self.RABBITMQ_HOST}:{self.RABBITMQ_PORT}/{self.VHOST}"
-        )
+    # @property
+    # def rabbitmq_url(self) -> str:
+    #     return (
+    #         f"amqp://{self.RABBITMQ_USERNAME}:{quote(self.RABBITMQ_PASSWORD)}@"
+    #         f"{self.RABBITMQ_HOST}:{self.RABBITMQ_PORT}/{self.VHOST}"
+    #     )
 
 
     @property
@@ -53,10 +53,6 @@ class Settings(BaseSettings):
             f"postgresql+asyncpg://{self.TEST_DB_USER}:{self.TEST_DB_PASSWORD}@"
             f"{self.TEST_DB_HOST}:{self.TEST_DB_PORT}/{self.TEST_DB_NAME}"
         )
-
-    def get_webhook_url(self) -> str:
-        """Возвращает URL вебхука с кодированием специальных символов."""
-        return f"{self.BASE_SITE}/webhook"
 
     SMTP_HOST: str
     SMTP_PORT: int

@@ -50,6 +50,7 @@ async def lifespan(app: FastAPI):
     dp.include_router(admin_router)
     await start_bot()
     webhook_url = settings.get_webhook_url()
+    print(f'web  {webhook_url}')
 
     # Запуск планировщика задач
     await start_scheduler()
