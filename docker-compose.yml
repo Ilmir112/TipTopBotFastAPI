@@ -18,6 +18,8 @@ services:
   redis:
     image: redis:7
     container_name: redis
+    ports:
+      - 6398
 
   tip_top:
     image: image
