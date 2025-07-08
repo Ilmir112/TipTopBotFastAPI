@@ -151,6 +151,13 @@ app.add_middleware(
     ],
 )
 
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    body = await request.body()
+    logging.info(f"Received request: {request.method} {request.url} headers: {request.headers} body: {body}")
+    response = await call_next(request)
+    return response
+
 admin = Admin(app, engine, authentication_backend=authentication_backend)
 
 admin.add_view(UserAdmin)
