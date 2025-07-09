@@ -1,3 +1,4 @@
+from app.api.applications.dao import ApplicationDAO
 from app.logger import logger
 from datetime import date, datetime
 from http.client import HTTPException
@@ -12,6 +13,8 @@ from app.api.working_day.dao import WorkingDayDAO
 from app.bot.create_bot import bot
 from app.api.working_day.schemas import WorkingDaysInput
 from app.config import settings
+
+
 
 router = APIRouter(
     prefix='/day',
@@ -47,6 +50,22 @@ async def find_working_by_date(working_day: date):
     except Exception as e:
         logger.error(f"Unexpected error in find_working_by_date: {e}", exc_info=True)
         return JSONResponse(status_code=500, content={"detail": "Внутренняя ошибка сервера"})
+
+
+
+
+@router.get("/find_applications_by_date")
+async def find_applications_by_date(working_day: date):
+    try:
+        result = await ApplicationDAO.find_all(appointment_date=working_day)
+        if not result:
+            return {"workingDays": []}
+        return {"workingDays": list(filter(lambda x: (x.appointment_time, x.client_name), result))}
+    except SQLAlchemyError as e:
+        logger.error(f"Database error in find_working_by_date: {e}", exc_info=True)
+    except Exception as e:
+        logger.error(f"Unexpected error in find_working_by_date: {e}", exc_info=True)
+
 
 
 @router.get("/find_all")
@@ -122,7 +141,6 @@ async def remove_working_day_data(
             return JSONResponse(status_code=404, content={"detail": "Рабочий день не найден"})
 
         await WorkingDayDAO.delete(id=working_day_record.id)
-
         return {"status": "deleted"}
     except SQLAlchemyError as db_err:
         logger.error(f"Database error during delete of {working_day}: {db_err}", exc_info=True)

@@ -36,7 +36,7 @@ async def admin_keyboard(user_id: int) -> InlineKeyboardMarkup:
     from app.bot.handlers.registration import create_superuser_button
     from app.bot.handlers.applications import create_admin_application_button
 
-    url_applications = f"{settings.BASE_SITE}/admin_telegram?admin_id={user_id}&date=2025-07-08"
+    url_applications = f"{settings.BASE_SITE}/admin_telegram?admin_id={user_id}"
     url_edit_work_days = f'{settings.BASE_SITE}/work_days?user_id={user_id}'
 
     kb = InlineKeyboardBuilder()

@@ -1,6 +1,8 @@
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.future import select
 from sqlalchemy import update as sqlalchemy_update, delete as sqlalchemy_delete
+from sqlalchemy.orm import joinedload
+
 from app.database import async_session_maker
 
 
@@ -52,6 +54,22 @@ class BaseDAO:
         """
         async with async_session_maker() as session:
             query = select(cls.model).filter_by(**filter_by)
+            result = await session.execute(query)
+            return result.scalars().all()
+
+    @classmethod
+    async def find_all_applications(cls, **filter_by):
+        """
+        Асинхронно находит и возвращает все экземпляры модели, удовлетворяющие указанным критериям.
+
+        Аргументы:
+            **filter_by: Критерии фильтрации в виде именованных параметров.
+
+        Возвращает:
+            Список экземпляров модели.
+        """
+        async with async_session_maker() as session:
+            query = select(cls.model).options(joinedload(cls.model.service)).filter_by(**filter_by)
             result = await session.execute(query)
             return result.scalars().all()
 

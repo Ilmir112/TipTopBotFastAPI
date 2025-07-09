@@ -39,7 +39,7 @@ scheduler = AsyncIOScheduler()
 
 
 async def start_scheduler():
-    scheduler.add_job(send_reminders, 'interval', minutes=1)
+    scheduler.add_job(send_reminders, 'interval', hours=1)
     scheduler.start()
 
 
@@ -53,7 +53,6 @@ async def lifespan(app: FastAPI):
     dp.include_router(admin_router)
     await start_bot()
     webhook_url = settings.get_webhook_url()
-    print(f'web  {webhook_url}')
 
     # Запуск планировщика задач
     await start_scheduler()
@@ -73,7 +72,7 @@ async def setup_webhook(webhook_url):
         info = await bot.get_webhook_info()
         if info.url != webhook_url:
             await bot.set_webhook(url=webhook_url)
-            print("Webhook установлен.")
+
         else:
             print("Webhook уже установлен.")
     except aiogram.exceptions.TelegramRetryAfter as e:
@@ -92,8 +91,8 @@ app.mount('/static', StaticFiles(directory='app/static'), 'static')
 
 @app.post("/webhook")
 async def webhook(request: Request) -> None:
-    body = await request.body()
-    logger.info(f"Received webhook request: {body}")
+    # body = await request.body()
+    # logger.info(f"Received webhook request: {body}")
     update = Update.model_validate(await request.json(), context={"bot": bot})
     await dp.feed_update(bot, update)
     logger.info("Update processed")
@@ -151,12 +150,12 @@ app.add_middleware(
     ],
 )
 
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    body = await request.body()
-    logging.info(f"Received request: {request.method} {request.url} headers: {request.headers} body: {body}")
-    response = await call_next(request)
-    return response
+# @app.middleware("http")
+# async def log_requests(request: Request, call_next):
+#     body = await request.body()
+#     logging.info(f"Received request: {request.method} {request.url} headers: {request.headers} body: {body}")
+#     response = await call_next(request)
+#     return response
 
 admin = Admin(app, engine, authentication_backend=authentication_backend)
 

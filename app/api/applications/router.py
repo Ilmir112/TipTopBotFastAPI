@@ -2,6 +2,8 @@ from datetime import date
 
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import joinedload
+
 from app.api.applications.schemas import AppointmentData
 from app.api.service.dao import ServiceDAO
 from app.bot.create_bot import bot
@@ -34,7 +36,8 @@ async def get_booked_times(appointment_date: date):
 @router.get('/find_applications')
 async def get_applications_all():
     try:
-        applications_list = await ApplicationDAO.find_all()
+
+        applications_list = await ApplicationDAO.find_all_applications()
         if applications_list:
             return applications_list
     except Exception as e:

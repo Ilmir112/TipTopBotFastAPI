@@ -10,3 +10,9 @@
             color: red;
             cursor: pointer;
         }
+
+        /* calendar.css */
+.has-application .flatpickr-day {
+    background-color: #4CAF50; /* зеленый цвет */
+    color: white;
+}
