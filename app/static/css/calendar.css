@@ -16,3 +16,10 @@
     background-color: #4CAF50; /* зеленый цвет */
     color: white;
 }
+
+.day.has-records {
+    background-color: red !important;
+}
+.day.no-records {
+    background-color: green !important;
+}

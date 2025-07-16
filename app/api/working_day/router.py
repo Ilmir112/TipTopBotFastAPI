@@ -53,7 +53,6 @@ async def find_working_by_date(working_day: date):
 
 
 
-
 @router.get("/find_applications_by_date")
 async def find_applications_by_date(working_day: date):
     try:
@@ -99,35 +98,33 @@ async def find_working_day_all():
 
 @router.post("/add")
 async def add_working_day(request: Request,
-                          working_days: list[WorkingDaysInput]):
-    working_day_list = []
+                          working_day: date = Query(...)):
     try:
-        for day in working_days:
-            date_value = day.date
-            if isinstance(date_value, str):
-                date_obj = datetime.strptime(date_value, '%Y-%m-%d').date()
-            else:
-                date_obj = date_value
+        date_value = working_day.date
+        if isinstance(date_value, str):
+            date_obj = datetime.strptime(date_value, '%Y-%m-%d').date()
+        else:
+            date_obj = date_value
 
-            existing_day = await WorkingDayDAO.find_one_or_none(date=date_obj)
-            if not existing_day:
-                new_day = await WorkingDayDAO.add(date=date_obj)
-                working_day_list.append({"id": new_day.id, "date": new_day.date})
-                for admin_id in settings.ADMIN_LIST:
-                    try:
-                        await bot.send_message(chat_id=admin_id, text="Рабочие дни успешно добавлены!")
-                    except Exception as e_bot:
-                        logger.error(f"Ошибка при отправке сообщения бота администратору {admin_id}: {e_bot}",
-                                     exc_info=True)
+        existing_day = await WorkingDayDAO.find_one_or_none(date=date_obj)
+        if not existing_day:
+            new_day = await WorkingDayDAO.add(date=date_obj)
 
-        return {"status": "success"}
+            for admin_id in settings.ADMIN_LIST:
+                try:
+                    await bot.send_message(chat_id=admin_id, text=f"Рабочий день {new_day} успешно добавлены!")
+                except Exception as e_bot:
+                    logger.error(f"Ошибка при отправке сообщения бота администратору {admin_id}: {e_bot}",
+                                 exc_info=True)
+
+            return {"status": "success"}
     except SQLAlchemyError as db_err:
         msg = f'Database Exception work_day {db_err}'
-        logger.error(msg, extra={"working_day": working_day_list}, exc_info=True)
+        logger.error(msg, extra={"working_day": date_value}, exc_info=True)
         return JSONResponse(status_code=500, content={"detail": "Ошибка базы данных"})
     except Exception as e:
         msg = f'Unexpected error: {str(e)}'
-        logger.error(msg, extra={"working_day": working_day_list}, exc_info=True)
+        logger.error(msg, extra={"working_day": date_value}, exc_info=True)
         return JSONResponse(status_code=500, content={"detail": "Внутренняя ошибка сервера"})
 
 

@@ -15,4 +15,3 @@ class WorkingDaysInput(BaseModel):
 class SUserToken(BaseModel):
     user_id: int
     token: str
-
