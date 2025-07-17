@@ -17,8 +17,8 @@ from app.config import settings
 from app.logger import logger
 
 router = APIRouter(prefix='', tags=['Фронтенд'])
-# templates = Jinja2Templates(directory='app/templates')
-templates = Jinja2Templates(directory='templates')
+templates = Jinja2Templates(directory='app/templates')
+# templates = Jinja2Templates(directory='templates')
 
 
 @router.get("/", response_class=HTMLResponse)
