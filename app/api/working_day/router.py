@@ -1,9 +1,9 @@
 from app.api.applications.dao import ApplicationDAO
 from app.logger import logger
 from datetime import date, datetime
-from http.client import HTTPException
 
-from fastapi import APIRouter, Query
+
+from fastapi import APIRouter, Query, HTTPException
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,8 +13,6 @@ from app.api.working_day.dao import WorkingDayDAO
 from app.bot.create_bot import bot
 from app.api.working_day.schemas import WorkingDaysInput
 from app.config import settings
-
-
 
 router = APIRouter(
     prefix='/day',
@@ -52,7 +50,6 @@ async def find_working_by_date(working_day: date):
         return JSONResponse(status_code=500, content={"detail": "Внутренняя ошибка сервера"})
 
 
-
 @router.get("/find_applications_by_date")
 async def find_applications_by_date(working_day: date):
     try:
@@ -64,7 +61,6 @@ async def find_applications_by_date(working_day: date):
         logger.error(f"Database error in find_working_by_date: {e}", exc_info=True)
     except Exception as e:
         logger.error(f"Unexpected error in find_working_by_date: {e}", exc_info=True)
-
 
 
 @router.get("/find_all")
@@ -98,24 +94,25 @@ async def find_working_day_all():
 
 @router.post("/add")
 async def add_working_day(request: Request,
-                          working_day: date = Query(...)):
+                          working_day: WorkingDaysInput):
     try:
-        date_value = working_day.date
-        if isinstance(date_value, str):
-            date_obj = datetime.strptime(date_value, '%Y-%m-%d').date()
+
+        if isinstance(working_day, str):
+            date_obj = datetime.strptime(working_day, '%Y-%m-%d').date()
         else:
+            date_value = working_day.working_day
             date_obj = date_value
 
         existing_day = await WorkingDayDAO.find_one_or_none(date=date_obj)
         if not existing_day:
             new_day = await WorkingDayDAO.add(date=date_obj)
-
-            for admin_id in settings.ADMIN_LIST:
-                try:
+            try:
+                for admin_id in settings.ADMIN_LIST:
                     await bot.send_message(chat_id=admin_id, text=f"Рабочий день {new_day} успешно добавлены!")
-                except Exception as e_bot:
-                    logger.error(f"Ошибка при отправке сообщения бота администратору {admin_id}: {e_bot}",
-                                 exc_info=True)
+
+            except Exception as e_bot:
+                logger.error(f"Ошибка при отправке сообщения бота администратору {admin_id}: {e_bot}",
+                             exc_info=True)
 
             return {"status": "success"}
     except SQLAlchemyError as db_err:
@@ -128,17 +125,43 @@ async def add_working_day(request: Request,
         return JSONResponse(status_code=500, content={"detail": "Внутренняя ошибка сервера"})
 
 
+@router.get("find_id")
+async def find_id_day(
+        working_day: date = Query(...)
+):
+    try:
+        working_day_id = await WorkingDayDAO.find_one_or_none(working_day=working_day)
+        if not working_day_id:
+            return working_day_id
+    except SQLAlchemyError as e:
+        logger.error(f"Database error in find_id_day: {e}", exc_info=True)
+    except Exception as e:
+        logger.error(f"Unexpected error in find_id_day: {e}", exc_info=True)
+
+
 @router.delete("/remove")
 async def remove_working_day_data(
         working_day: date = Query(...)
 ):
     try:
-        working_day_record = await WorkingDayDAO.find_one_or_none(date=working_day)
-        if not working_day_record:
-            return JSONResponse(status_code=404, content={"detail": "Рабочий день не найден"})
+        application_in_works_day = await ApplicationDAO.find_all_applications(appointment_date=working_day)
+        if not application_in_works_day:
+            working_day_record = await WorkingDayDAO.find_one_or_none(date=working_day)
+            if not working_day_record:
+                return JSONResponse(status_code=404, content={"detail": "Рабочий день не найден"})
 
-        await WorkingDayDAO.delete(id=working_day_record.id)
-        return {"status": "deleted"}
+            await WorkingDayDAO.delete(id=working_day_record.id)
+            return {"status": "deleted"}
+        else:
+            message = f"на {working_day} день есть записи:"
+            for application in application_in_works_day:
+                message += f"\n{application.client_name} - {application.appointment_time.strftime('%H:%M')} " \
+                            # f"(телефон-{application.user.telephone_number})"
+            message += '\n удаление не возможно'
+            # await bot.send_message(settings.ADMIN_ID, message)
+            # Вместо raise JSONResponse
+            return JSONResponse(status_code=409, content={"detail": message})
+
     except SQLAlchemyError as db_err:
         logger.error(f"Database error during delete of {working_day}: {db_err}", exc_info=True)
         return JSONResponse(status_code=500, content={"detail": "Ошибка базы данных"})

@@ -28,3 +28,7 @@ class Application(Base):
     user: Mapped["Users"] = relationship("Users", back_populates="applications")
     # master: Mapped["Master"] = relationship(back_populates="applications")
     service: Mapped["Service"] = relationship("Service", back_populates="applications")
+
+    # Новая связь с рабочими днями
+    working_day_id: Mapped[int] = mapped_column(Integer, ForeignKey('working_day.id'), nullable=False)
+    working_day: Mapped["WorkingDay"] = relationship("WorkingDay")

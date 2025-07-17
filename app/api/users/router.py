@@ -120,8 +120,9 @@ async def read_users_all():
 async def read_users_find_by_id(user_id: int):
     try:
         result = await SuperUsersDAO.find_one_or_none_by_id(user_id)
-        if not result:
-            raise HTTPException(status_code=404, detail="Пользователь не найден")
+        # if not result:
+        #     return
+            # raise HTTPException(status_code=404, detail="Пользователь не найден")
         return result
     except Exception as e:
         logger.error('Error fetching user by ID', exc_info=True)

@@ -9,7 +9,7 @@ class SWorkingDay(BaseModel):
 
 
 class WorkingDaysInput(BaseModel):
-    date: date
+    working_day: date = Field(..., description="Дата")
 
 
 class SUserToken(BaseModel):

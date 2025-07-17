@@ -6,6 +6,7 @@ from sqlalchemy.orm import joinedload
 
 from app.api.applications.schemas import AppointmentData
 from app.api.service.dao import ServiceDAO
+from app.api.working_day.dao import WorkingDayDAO
 from app.bot.create_bot import bot
 from app.api.applications.dao import ApplicationDAO
 from app.bot.handlers.user_router import check_admin
@@ -48,6 +49,13 @@ async def get_applications_all():
 @router.post('/add')
 async def add_appointment(data: AppointmentData):
     try:
+        # Проверка наличия даты в рабочие дни
+        working_day_exists = WorkingDayDAO.find_one_or_none(date=data.appointment_date)
+        if not working_day_exists:
+            message = "Заявка может быть создана только в рабочие дни."
+            await bot.send_message(data.user_id, message)
+            raise ValueError(message)
+
         service = await ServiceDAO.find_all(service_name=data.service_name)
         if service:
             return await ApplicationDAO.add(
@@ -55,7 +63,8 @@ async def add_appointment(data: AppointmentData):
                 service_id=service.service_id,
                 appointment_date=data.appointment_date,
                 appointment_time=data.appointment_time,
-                user_id=data.user_id)
+                user_id=data.user_id,
+                working_day_id=working_day_exists.id)
         else:
             raise HTTPException(status_code=404, detail="Service not found")
     except Exception as e:
@@ -83,14 +92,19 @@ async def create_appointment(request: Request):
     except Exception as e:
         logger.error(f"Error parsing service field '{validated_data.service}': {e}")
         raise HTTPException(status_code=400, detail="Invalid service format")
-
+    try:
+        working_day_id = await WorkingDayDAO.find_one_or_none(date=validated_data.appointment_date)
+    except Exception as e:
+        logger.error(f"Error fetching working day id: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
     try:
         result = await ApplicationDAO.add_appointment_if_available(
             user_id=validated_data.user_id,
             service_id=int(service_id_str),
             appointment_date=validated_data.appointment_date,
             appointment_time=validated_data.appointment_time,
-            client_name=validated_data.name
+            client_name=validated_data.name,
+            working_day_id=working_day_id.id
         )
     except Exception as e:
         logger.error(f"Error adding appointment if available: {e}")

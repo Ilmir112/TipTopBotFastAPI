@@ -12,6 +12,7 @@ from app.api.service.router import find_service_all
 from app.api.users.dao import UsersDAO
 from app.api.users.router import register_user
 from app.api.users.schemas import SUsers
+from app.api.working_day.dao import WorkingDayDAO
 from app.api.working_day.router import find_working_day_all
 from app.bot.create_bot import bot
 from app.bot.handlers.user_router import user_router
@@ -186,12 +187,14 @@ async def time_chosen(callback_query: types.CallbackQuery, state: FSMContext):
         service_id = user_data.get('service_id')
         appointment_date = user_data.get('appointment_date').strftime("%d.%m.%Y")
 
+        working_day = await WorkingDayDAO.find_one_or_none(date=appointment_date)
         success = await ApplicationDAO.add_appointment_if_available(client_name=name,
                                                                     service_id=service_id,
                                                                     appointment_date=datetime.strptime(appointment_date,
                                                                                                        "%d.%m.%Y").date(),
                                                                     appointment_time=appointment_time,
-                                                                    user_id=user_id)
+                                                                    user_id=user_id,
+                                                                    working_day_id=working_day.id)
 
         if success:
             # Отправить подтверждение пользователю и админу

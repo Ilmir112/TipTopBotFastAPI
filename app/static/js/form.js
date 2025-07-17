@@ -139,6 +139,22 @@ buttons.forEach(button => {
     });
 });
 
+async function findWorkingDayIdByDate(dateString) {
+    const url = `/find_id?working_day=${encodeURIComponent(dateString)}`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // Предположим, что API возвращает либо объект с id, либо null
+        return data; // data — это working_day_id или null
+    } catch (error) {
+        console.error('Ошибка при вызове API:', error);
+        return null;
+    }
+}
+
 // Обработчик для закрытия попапа и отправки данных
 document.getElementById('closePopup').addEventListener('click', async function () {
     const name = document.getElementById('name').value.trim();
@@ -147,6 +163,7 @@ document.getElementById('closePopup').addEventListener('click', async function (
     const date = document.getElementById('date').value;
     const userId = document.getElementById('user_id') ? document.getElementById('user_id').value : '';
     const appointment_time = document.getElementById('selectedTime').value;
+    // const workingDayId = document.getElementById("workingDayId").value
 
     // Валидация
     if (name.length < 2 || name.length > 50) {
@@ -167,7 +184,8 @@ document.getElementById('closePopup').addEventListener('click', async function (
         service: serviceText,
         appointment_date: date,
         appointment_time: appointment_time,
-        user_id: userId
+        user_id: userId,
+        // working_day_id: workingDayId
     };
 
     try {
