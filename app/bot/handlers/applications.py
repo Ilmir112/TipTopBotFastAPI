@@ -185,9 +185,10 @@ async def time_chosen(callback_query: types.CallbackQuery, state: FSMContext):
         user_id = user_data.get('user_id')
 
         service_id = user_data.get('service_id')
-        appointment_date = user_data.get('appointment_date').strftime("%d.%m.%Y")
+        appointment_date = user_data.get('appointment_date')
 
         working_day = await WorkingDayDAO.find_one_or_none(date=appointment_date)
+        appointment_date = appointment_date.strftime("%d.%m.%Y")
         success = await ApplicationDAO.add_appointment_if_available(client_name=name,
                                                                     service_id=service_id,
                                                                     appointment_date=datetime.strptime(appointment_date,

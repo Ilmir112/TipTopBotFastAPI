@@ -86,8 +86,8 @@ async def setup_webhook(webhook_url):
 
 app = FastAPI(lifespan=lifespan)
 
-app.mount('/static', StaticFiles(directory='app/static'), 'static')
-# app.mount('/static', StaticFiles(directory='static'), 'static')
+# app.mount('/static', StaticFiles(directory='app/static'), 'static')
+app.mount('/static', StaticFiles(directory='static'), 'static')
 
 
 @app.post("/webhook")
