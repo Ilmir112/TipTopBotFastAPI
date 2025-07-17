@@ -39,8 +39,9 @@ scheduler = AsyncIOScheduler()
 
 
 async def start_scheduler():
-    scheduler.add_job(send_reminders, 'interval', hours=1)
-    scheduler.start()
+    if not scheduler.running:
+        scheduler.add_job(send_reminders, 'interval', hours=1)
+        scheduler.start()
 
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
