@@ -123,7 +123,7 @@ async def add_working_day(request: Request, working_day: WorkingDaysInput):
                     for admin_id in settings.ADMIN_LIST:
                         await bot.send_message(
                             chat_id=admin_id,
-                            text=f"Рабочий день {new_day} успешно добавлены!",
+                            text=f"Рабочий день {new_day.date} успешно добавлены!",
                         )
 
                 except Exception as e_bot:
