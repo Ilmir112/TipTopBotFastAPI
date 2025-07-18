@@ -1,4 +1,4 @@
-from aiogram.types import Message, KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup
 
 from app.api.users.dao import UsersDAO
 from app.bot.keyboards.kbs import main_keyboard
@@ -11,7 +11,8 @@ def get_about_us_text() -> str:
 Добро пожаловать в мир надежных решений для вашего автомобиля!
 
 ✨ Наша миссия:
-Обеспечить безопасность и комфорт вашего автомобиля, предлагая профессиональный шиномонтаж и обслуживание.
+Обеспечить безопасность и комфорт вашего автомобиля, предлагая 
+профессиональный шиномонтаж и обслуживание.
 
 🚗 Наши услуги:
 • Замена и балансировка шин
@@ -21,10 +22,12 @@ def get_about_us_text() -> str:
 • Установка и снятие колёс
 
 👷‍♂️ Наши мастера:
-Опытные специалисты с высокой квалификацией, использующие современное оборудование и последние технологии для качественного обслуживания.
+Опытные специалисты с высокой квалификацией, использующие современное оборудование
+ и последние технологии для качественного обслуживания.
 
 🌿 Наша атмосфера:
-Комфорт и доверие — наши приоритеты. Мы ценим ваше время и стараемся сделать процесс максимально быстрым и удобным.
+Комфорт и доверие — наши приоритеты. Мы ценим ваше время и стараемся 
+сделать процесс максимально быстрым и удобным.
 
 💎 Почему выбирают нас:
 • Индивидуальный подход к каждому клиенту
@@ -40,25 +43,37 @@ def get_about_us_text() -> str:
 ✨ Ваша безопасность — наш главный приоритет! ✨
 """
 
-async def greet_user(message: Message, is_new_user: bool, has_phone: bool = True) -> None:
+
+async def greet_user(
+    message: Message, is_new_user: bool, has_phone: bool = True
+) -> None:
     """
     Приветствует пользователя и отправляет соответствующее сообщение.
     """
     greeting = "Добро пожаловать" if is_new_user else "С возвращением"
     status = "Вы успешно зарегистрированы!" if is_new_user else "Рады видеть вас снова!"
-    text = f"{greeting}, <b>{message.from_user.full_name}</b>! {status}\n"\
-        f"<b>{message.from_user.full_name}</b>!"\
+    text = (
+        f"{greeting}, <b>{message.from_user.full_name}</b>! {status}\n"
+        f"<b>{message.from_user.full_name}</b>!"
         "Чем я могу помочь вам сегодня?"
+    )
     await message.answer(text)
-    phone_mes = "Для отправки напоминания прошу поделиться номером телефона" \
-        if has_phone is False else text
+    phone_mes = (
+        "Для отправки напоминания прошу поделиться номером телефона"
+        if has_phone is False
+        else text
+    )
     if has_phone is False:
         await send_contact_request_keyboard(message)
         return
 
-    await message.answer(phone_mes,
-        reply_markup=main_keyboard(user_id=message.from_user.id, first_name=message.from_user.first_name,
-                                   has_phone=has_phone)
+    await message.answer(
+        phone_mes,
+        reply_markup=main_keyboard(
+            user_id=message.from_user.id,
+            first_name=message.from_user.first_name,
+            has_phone=has_phone,
+        ),
     )
 
 
@@ -69,12 +84,11 @@ async def user_has_phone(user_id: int) -> bool:
             return True
     return False
 
+
 async def send_contact_request_keyboard(message: Message):
     keyboard = ReplyKeyboardMarkup(
         resize_keyboard=True,
         one_time_keyboard=True,
-        keyboard=[
-            [KeyboardButton(text="Поделиться номером", request_contact=True)]
-        ]
+        keyboard=[[KeyboardButton(text="Поделиться номером", request_contact=True)]],
     )
     await message.answer("Пожалуйста, поделитесь своим номером", reply_markup=keyboard)

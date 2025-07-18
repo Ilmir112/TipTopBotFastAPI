@@ -1,10 +1,13 @@
+from aiogram import types
 from aiogram.filters import StateFilter
-from aiogram import Router, F, types
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, Message, InlineKeyboardMarkup
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
 
-from app.api.users.models import SuperUsers
 from app.api.users.router import register_super_user
 from app.api.users.schemas import SUsersRegister
 from app.bot.handlers.admin_router import admin_router
@@ -19,13 +22,18 @@ class SuperUserForm(StatesGroup):
     access_level = State()
     telegram_id = State()
 
+
 # Клавиатура для начала создания суперюзера
-create_superuser_button = InlineKeyboardButton(text="Создать супер пользователя", callback_data="start_create_superuser")
+create_superuser_button = InlineKeyboardButton(
+    text="Создать супер пользователя", callback_data="start_create_superuser"
+)
 
 
 # Обработчик для запуска процесса:
 @admin_router.callback_query(lambda c: c.data == "start_create_superuser")
-async def handle_start_create_superuser(callback: types.CallbackQuery, state: FSMContext):
+async def handle_start_create_superuser(
+    callback: types.CallbackQuery, state: FSMContext
+):
     await callback.message.answer("Введите логин пользователя:")
     await state.set_state(SuperUserForm.login_user)
 
@@ -58,12 +66,15 @@ async def process_second_name(message: Message, state: FSMContext):
     await message.answer("Введите пароль:")
     await state.set_state(SuperUserForm.password)
 
+
 @admin_router.message(SuperUserForm.password)
 async def process_password(message: Message, state: FSMContext):
     password = message.text
     if password.isdigit():
         # Если пароль состоит только из цифр, попросить повторить ввод
-        await message.answer("Пароль не должен состоять только из цифр. Попробуйте еще раз:")
+        await message.answer(
+            "Пароль не должен состоять только из цифр. Попробуйте еще раз:"
+        )
         # Остаемся в том же состоянии для повторного ввода пароля
         await state.set_state(SuperUserForm.password)
     else:
@@ -77,30 +88,34 @@ async def process_password(message: Message, state: FSMContext):
             ]
         )
 
-        await message.answer("Выберите уровень доступа:", reply_markup=access_level_keyboard)
+        await message.answer(
+            "Выберите уровень доступа:", reply_markup=access_level_keyboard
+        )
 
 
-@admin_router.callback_query(lambda c: c.data.startswith('access_'))
+@admin_router.callback_query(lambda c: c.data.startswith("access_"))
 async def process_access_level(callback_query: types.CallbackQuery, state: FSMContext):
-    access_level = callback_query.data.split('_')[1]
+    access_level = callback_query.data.split("_")[1]
     data = await state.get_data()
-    data['access_level'] = access_level
+    data["access_level"] = access_level
 
     # Сохраняем все данные и создаем запись в базе
     new_superuser = SUsersRegister(
-        login_user=data['login_user'],
-        name_user=data['name_user'],
-        surname_user=data['surname_user'],
-        second_name=data['second_name'],
-        password=data['password'],  # Лучше хэшировать пароль!
+        login_user=data["login_user"],
+        name_user=data["name_user"],
+        surname_user=data["surname_user"],
+        second_name=data["second_name"],
+        password=data["password"],  # Лучше хэшировать пароль!
         access_level=access_level,
-        telegram_id=data['telegram_id']
+        telegram_id=data["telegram_id"],
     )
 
     # Сохраняем в базу (предположим, у вас есть сессия SQLAlchemy)
     result = await register_super_user(new_superuser)
     if result:
-        await callback_query.message.answer("Суперпользователь успешно создан!", reply_markup=None)
+        await callback_query.message.answer(
+            "Суперпользователь успешно создан!", reply_markup=None
+        )
 
     # Завершаем состояние
     await state.clear()

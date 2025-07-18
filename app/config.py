@@ -1,13 +1,8 @@
 import os
 from typing import Literal
-from urllib.parse import quote
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from faststream.rabbit import RabbitBroker
-from pydantic import ValidationError, ConfigDict
-from pydantic_settings import BaseSettings
 
-# from app.logger import logger
+from pydantic import ConfigDict, ValidationError
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -35,7 +30,6 @@ class Settings(BaseSettings):
     #         f"amqp://{self.RABBITMQ_USERNAME}:{quote(self.RABBITMQ_PASSWORD)}@"
     #         f"{self.RABBITMQ_HOST}:{self.RABBITMQ_PORT}/{self.VHOST}"
     #     )
-
 
     @property
     def DATABASE_URL(self):
@@ -70,9 +64,8 @@ class Settings(BaseSettings):
     TOKEN: str
     CHAT_ID: str
 
-    model_config = ConfigDict(env_file = ".env")
+    model_config = ConfigDict(env_file=".env")
     # model_config = ConfigDict(env_file = '../.env')
-
 
 
 try:

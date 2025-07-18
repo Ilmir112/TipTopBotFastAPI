@@ -1,11 +1,12 @@
 # Ваш обработчик логов
-from app.config import settings
-
-import threading
 import asyncio
-from queue import Queue
-from aiogram import Bot
 import logging
+import threading
+from queue import Queue
+
+from aiogram import Bot
+
+from app.config import settings
 
 
 class TelegramSender:
@@ -53,7 +54,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
 telegram_handler = TelegramHandler(sender, settings.CHAT_ID)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
 telegram_handler.setFormatter(formatter)
 
 logger.addHandler(telegram_handler)

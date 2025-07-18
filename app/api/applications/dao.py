@@ -1,14 +1,13 @@
 from datetime import datetime, timedelta
-from time import strptime
 from typing import List
 
 from pydantic import BaseModel
-from sqlalchemy.future import select
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
-from app.dao.base import BaseDAO
 from app.api.applications.models import Application
+from app.dao.base import BaseDAO
 from app.database import async_session_maker
 
 
@@ -25,10 +24,11 @@ class ApplicationDAO(BaseDAO):
     async def get_booked_times(cls, appointment_date: str) -> List[str]:
 
         async with async_session_maker() as session:
-            query = select(cls.model.appointment_time).where(cls.model.appointment_date == appointment_date)
+            query = select(cls.model.appointment_time).where(
+                cls.model.appointment_date == appointment_date
+            )
             result = await session.execute(query)
             return result.scalars().all()
-
 
     @classmethod
     async def is_time_available(cls, appointment_date, appointment_time):
@@ -37,7 +37,7 @@ class ApplicationDAO(BaseDAO):
                 # Проверяем наличие записи на указанную дату и время для данного мастера
                 query = select(cls.model).where(
                     cls.model.appointment_date == appointment_date,
-                    cls.model.appointment_time == appointment_time
+                    cls.model.appointment_time == appointment_time,
                 )
 
                 result = await session.execute(query)
@@ -49,8 +49,8 @@ class ApplicationDAO(BaseDAO):
 
     @classmethod
     async def add_appointment_if_available(cls, **values):
-        appointment_date = values.get('appointment_date')
-        appointment_time = values.get('appointment_time')
+        appointment_date = values.get("appointment_date")
+        appointment_time = values.get("appointment_time")
         # master_id = values.get('master_id')
 
         # Проверяем доступность времени
@@ -79,10 +79,14 @@ class ApplicationDAO(BaseDAO):
                 query = (
                     select(cls.model)
                     .options(joinedload(cls.model.service))
-                    .where(cls.model.appointment_date <= datetime.now().date() + timedelta(days=7))
-                    .filter_by(user_id=user_id).order_by(
+                    .where(
+                        cls.model.appointment_date
+                        <= datetime.now().date() + timedelta(days=7)
+                    )
+                    .filter_by(user_id=user_id)
+                    .order_by(
                         cls.model.appointment_date.asc(),
-                        cls.model.appointment_time.asc()
+                        cls.model.appointment_time.asc(),
                     )
                 )
                 result = await session.execute(query)
@@ -94,9 +98,11 @@ class ApplicationDAO(BaseDAO):
                         {
                             "application_id": app.id,
                             "service_name": app.service.service_name,
-                            "appointment_date": app.appointment_date.strftime("%d.%m.%Y"),
+                            "appointment_date": app.appointment_date.strftime(
+                                "%d.%m.%Y"
+                            ),
                             "appointment_time": app.appointment_time.strftime("%H.%M"),
-                            "client_name": app.client_name
+                            "client_name": app.client_name,
                         }
                         for app in applications
                     ]
@@ -107,7 +113,8 @@ class ApplicationDAO(BaseDAO):
     @classmethod
     async def get_all_applications(cls, date):
         """
-        Возвращает все заявки в базе данных с дополнительной информацией о мастере и услуге.
+        Возвращает все заявки в базе данных с дополнительной
+        информацией о мастере и услуге.
 
         Возвращает:
             Список всех заявок с именами мастеров и услуг.
@@ -121,7 +128,8 @@ class ApplicationDAO(BaseDAO):
                     .where(cls.model.appointment_date == date)
                     .order_by(
                         cls.model.appointment_date.asc(),
-                        cls.model.appointment_time.asc())
+                        cls.model.appointment_time.asc(),
+                    )
                 )
                 result = await session.execute(query)
                 applications = result.scalars().all()
@@ -135,7 +143,7 @@ class ApplicationDAO(BaseDAO):
                         "appointment_date": app.appointment_date.strftime("%d.%m.%Y"),
                         "appointment_time": app.appointment_time.strftime("%H.%M"),
                         "client_name": app.client_name,  # Имя клиента
-                        "telephone_number": getattr(app.user, 'telephone_number', "-")
+                        "telephone_number": getattr(app.user, "telephone_number", "-"),
                     }
                     for app in applications
                 ]

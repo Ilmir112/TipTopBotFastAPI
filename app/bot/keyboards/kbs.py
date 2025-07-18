@@ -1,14 +1,19 @@
-from aiogram.types import ReplyKeyboardMarkup, WebAppInfo, InlineKeyboardMarkup
-from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, WebAppInfo
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 
-
+from app.api.applications.models import Application
+from app.api.service.models import Service
 from app.config import settings
 
 
-def main_keyboard(user_id: int, first_name: str, has_phone: bool = False) -> ReplyKeyboardMarkup:
+def main_keyboard(
+    user_id: int, first_name: str, has_phone: bool = False
+) -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardBuilder()
     url_applications = f"{settings.BASE_SITE}/applications?user_id={user_id}"
-    url_add_application = f'{settings.BASE_SITE}/form?user_id={user_id}&first_name={first_name}'
+    url_add_application = (
+        f"{settings.BASE_SITE}/form?user_id={user_id}&first_name={first_name}"
+    )
 
     # Проверяем наличие номера телефона
     kb.button(text="🌐 Мои заявки", web_app=WebAppInfo(url=url_applications))
@@ -33,18 +38,21 @@ def back_keyboard() -> ReplyKeyboardMarkup:
 
 async def admin_keyboard(user_id: int) -> InlineKeyboardMarkup:
     from app.api.users.router import read_users_find_by_id
-    from app.bot.handlers.registration import create_superuser_button
     from app.bot.handlers.applications import create_admin_application_button
+    from app.bot.handlers.registration import create_superuser_button
 
     url_applications = f"{settings.BASE_SITE}/admin_telegram?admin_id={user_id}"
-    url_edit_work_days = f'{settings.BASE_SITE}/work_days?user_id={user_id}'
+    url_edit_work_days = f"{settings.BASE_SITE}/work_days?user_id={user_id}"
 
     kb = InlineKeyboardBuilder()
     kb.button(text="🏠 На главную", callback_data="back_home")
     kb.button(text="📝 Смотреть заявки", web_app=WebAppInfo(url=url_applications))
     kb.button(text="📰 Добавить новость", callback_data="add_news")
-    # kb.button(text="📝 Смотреть сайт", url="https://7db91ec2-75b8-4079-a086-8d598f685a93.tunnel4.com/")
-    kb.button(text="⏰ Редактировать рабочие дни", web_app=WebAppInfo(url=url_edit_work_days))
+    # kb.button(text="📝 Смотреть сайт",
+    # url="https://7db91ec2-75b8-4079-a086-8d598f685a93.tunnel4.com/")
+    kb.button(
+        text="⏰ Редактировать рабочие дни", web_app=WebAppInfo(url=url_edit_work_days)
+    )
     kb.row(create_admin_application_button)
     # Новая кнопка для добавления новости
 
@@ -59,13 +67,17 @@ async def admin_keyboard(user_id: int) -> InlineKeyboardMarkup:
 
 def app_keyboard(user_id: int, first_name: str) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
-    url_add_application = f'{settings.BASE_SITE}/form?user_id={user_id}&first_name={first_name}'
+    url_add_application = (
+        f"{settings.BASE_SITE}/form?user_id={user_id}&first_name={first_name}"
+    )
     kb.button(text="📝 Оставить заявку", web_app=WebAppInfo(url=url_add_application))
     kb.adjust(1)
     return kb.as_markup()
 
 
-def applications_list_keyboard(applications: list["Application"]) -> InlineKeyboardMarkup:
+def applications_list_keyboard(
+    applications: list["Application"],
+) -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     for app in applications:
         # Можно отображать дату и имя клиента
@@ -85,4 +97,3 @@ def services_list_keyboard(services: list["Service"]) -> InlineKeyboardMarkup:
         kb.button(text=label, callback_data=callback_data)
     kb.button(text="Назад", callback_data="back_to_main")
     return kb.as_markup()
-

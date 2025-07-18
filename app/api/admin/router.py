@@ -1,13 +1,13 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
-
-from app.database import async_session_maker
-from app.main import app
-from app.api.users.dao import UsersDAO
-from app.api.service.dao import Service
-from app.api.users.dao import UsersDAO
-
-from sqlalchemy.orm import Session
+# from fastapi import FastAPI, HTTPException
+# from fastapi.responses import HTMLResponse
+#
+# from app.database import async_session_maker
+# from app.main import app
+# from app.api.users.dao import UsersDAO
+# from app.api.service.dao import Service
+# from app.api.users.dao import UsersDAO
+#
+# from sqlalchemy.orm import Session
 
 #
 # @app.get("/admin/norms/{norm_id}/view", response_class=HTMLResponse)
@@ -17,7 +17,8 @@ from sqlalchemy.orm import Session
 #         if not norm:
 #             raise HTTPException(status_code=404, detail="Запись не найдена")
 #
-#         # Создайте HTML-шаблон прямо здесь или используйте шаблонизатор (например, Jinja2)
+#         # Создайте HTML-шаблон прямо здесь или используйте
+#         шаблонизатор (например, Jinja2)
 #         html_content = f"""
 #         <html>
 #             <head>

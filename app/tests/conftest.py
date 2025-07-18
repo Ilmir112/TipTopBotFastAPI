@@ -3,15 +3,15 @@ import json
 from datetime import datetime, timedelta
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import insert
 
+from app.api.applications.models import Application
+from app.api.service.models import Service
+from app.api.users.models import SuperUsers, Users
+from app.api.working_day.models import WorkingDay
 from app.config import settings
 from app.database import Base, async_session_maker, engine
-from app.api.users.models import Users, SuperUsers
-from app.api.service.models import Service
-from app.api.working_day.models import WorkingDay
-from app.api.applications.models import Application
 from app.main import app as fastapi_app
 
 
@@ -24,22 +24,22 @@ async def prepare_database():
         await conn.run_sync(Base.metadata.create_all)
 
     def open_mock_json(model: str):
-        with open(f"app/tests/mock_{model}.json", "r", encoding='utf-8') as file:
+        with open(f"app/tests/mock_{model}.json", "r", encoding="utf-8") as file:
             return json.load(file)
 
+    workdays = validate_data_in_timestamp(open_mock_json("workdays"))
     users = validate_data_in_timestamp(open_mock_json("users"))
     service = validate_data_in_timestamp(open_mock_json("service"))
     super_users = validate_data_in_timestamp(open_mock_json("super_users"))
     application = validate_data_in_timestamp(open_mock_json("application"))
-    workdays = validate_data_in_timestamp(open_mock_json("workdays"))
 
     async with async_session_maker() as session:
         for Model, values in [
+            (WorkingDay, workdays),
             (Users, users),
             (SuperUsers, super_users),
             (Service, service),
             (Application, application),
-            (WorkingDay, workdays),
         ]:
             query = insert(Model).values(values)
             await session.execute(query)
@@ -48,7 +48,7 @@ async def prepare_database():
 
 
 def parse_time_str(time_str):
-    hours, minutes, seconds = map(int, time_str.split(':'))
+    hours, minutes, seconds = map(int, time_str.split(":"))
     return timedelta(hours=hours, minutes=minutes, seconds=seconds)
 
 
@@ -60,7 +60,7 @@ def validate_data_in_timestamp(value_list):
             if isinstance(value, datetime) or key in ["date", "appointment_date"]:
                 value_dict_new[key] = datetime.strptime(value, "%Y-%m-%d")
             # Преобразуем время
-            elif key in ['time_work']:
+            elif key in ["time_work"]:
                 value_dict_new[key] = parse_time_str(value)
             elif key in ["appointment_time"]:
                 value_dict_new[key] = datetime.strptime(value, "%H:%M")
@@ -84,7 +84,7 @@ def event_loop(request):
 async def ac():
     "Асинхронный клиент для тестирования эндпоинтов"
     async with AsyncClient(
-            transport=ASGITransport(app=fastapi_app), base_url="http://test"
+        transport=ASGITransport(app=fastapi_app), base_url="http://test"
     ) as ac:
         yield ac
 
@@ -93,7 +93,7 @@ async def ac():
 async def authenticated_ac():
     "Асинхронный аутентифицированный клиент для тестирования эндпоинтов"
     async with AsyncClient(
-            transport=ASGITransport(app=fastapi_app), base_url="http://test"
+        transport=ASGITransport(app=fastapi_app), base_url="http://test"
     ) as ac:
         response = await ac.post(
             "/auth/login",

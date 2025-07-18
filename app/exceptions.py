@@ -18,6 +18,7 @@ class UnauthorizedException(ZimaException):
     status_code = status.HTTP_401_UNAUTHORIZED
     detail = "Только админ может входить через Telegram."
 
+
 class IncorectLoginOrPassword(ZimaException):
     status_code = status.HTTP_401_UNAUTHORIZED
     detail = "Неверная логин или пароль"

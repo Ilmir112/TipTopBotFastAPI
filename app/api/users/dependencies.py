@@ -1,29 +1,27 @@
 from datetime import datetime
 from typing import Optional
 
-from fastapi import Depends, Request, Header, HTTPException
+from fastapi import Depends, Header, Request
 from jose import JWTError, jwt
 
 from app.api.users.auth import create_access_token
-
-
+from app.api.users.dao import SuperUsersDAO
+from app.api.users.models import Users
 from app.config import settings
 from app.exceptions import (
     IncorrectTokenFormatException,
     TokenAbsentException,
     TokenExpiredException,
-    UserAlreadyExistsException, UnauthorizedException,
+    UnauthorizedException,
+    UserAlreadyExistsException,
 )
-from app.api.users.dao import UsersDAO, SuperUsersDAO
-from app.api.users.models import Users
-
 
 
 async def get_token(request: Request, authorization: Optional[str] = Header(None)):
 
     # Попытка получить токен из заголовка Authorization
     if authorization and authorization.startswith("Bearer "):
-        return authorization[len("Bearer "):]
+        return authorization[len("Bearer ") :]
 
     # Если токена в заголовке нет, попробуем из cookies
     token = request.cookies.get("access_token")
@@ -38,7 +36,9 @@ async def get_token(request: Request, authorization: Optional[str] = Header(None
 
 async def get_current_user(token: str = Depends(get_token)):
     try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = jwt.decode(
+            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+        )
     except JWTError:
         raise IncorrectTokenFormatException
 
@@ -55,6 +55,7 @@ async def get_current_user(token: str = Depends(get_token)):
             raise UserAlreadyExistsException
 
     return user_id
+
 
 # Новая функция для входа через Telegram
 async def login_via_telegram(telegram_id: int):

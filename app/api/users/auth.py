@@ -3,8 +3,8 @@ from datetime import datetime, timedelta
 from jose import jwt
 from passlib.context import CryptContext
 
+from app.api.users.dao import SuperUsersDAO
 from app.config import settings
-from app.api.users.dao import UsersDAO, SuperUsersDAO
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

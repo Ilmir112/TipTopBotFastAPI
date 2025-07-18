@@ -1,22 +1,20 @@
 import sys
 from logging.config import fileConfig
-from os.path import dirname, abspath
-
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from os.path import abspath, dirname
 
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 from app.config import settings
 from app.database import Base
 
 sys.path.insert(0, dirname(dirname(dirname(abspath(__file__)))))
 
-from app.api.service.models import Service
-from app.api.users.models import Users, SuperUsers
-# from app.api.masters.models import Master
-from app.api.applications.models import Application
-from app.api.working_day.models import WorkingDay
+# from app.api.masters.models import Master # noqa
+from app.api.applications.models import Application # noqa
+from app.api.service.models import Service # noqa
+from app.api.users.models import SuperUsers, Users # noqa
+from app.api.working_day.models import WorkingDay # noqa
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -79,9 +77,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

@@ -1,32 +1,50 @@
 from datetime import date
 
-from fastapi import APIRouter, Request, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
-from sqlalchemy.orm import joinedload
 
+from app.api.applications.dao import ApplicationDAO
 from app.api.applications.schemas import AppointmentData
 from app.api.service.dao import ServiceDAO
 from app.api.working_day.dao import WorkingDayDAO
 from app.bot.create_bot import bot
-from app.api.applications.dao import ApplicationDAO
 from app.bot.handlers.user_router import check_admin
 from app.bot.keyboards.kbs import main_keyboard
 from app.config import settings
 from app.logger import logger
 
-router = APIRouter(prefix='/api', tags=['API'])
+router = APIRouter(prefix="/api", tags=["API"])
 
 
-@router.get('/get_booked_times')
+@router.get("/get_booked_times")
 async def get_booked_times(appointment_date: date):
-    time_list = ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00',
-                 '12:30', "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
-                 "16:00", "16:30", "17:00", "17:30"]
+    time_list = [
+        "09:00",
+        "09:30",
+        "10:00",
+        "10:30",
+        "11:00",
+        "11:30",
+        "12:00",
+        "12:30",
+        "13:00",
+        "13:30",
+        "14:00",
+        "14:30",
+        "15:00",
+        "15:30",
+        "16:00",
+        "16:30",
+        "17:00",
+        "17:30",
+    ]
     try:
         result = await ApplicationDAO.get_booked_times(appointment_date)
         if result:
             result_strs = [t.strftime("%H:%M") for t in result]
-            new_time_list = [time for time in time_list if not any(time == t for t in result_strs)]
+            new_time_list = [
+                time for time in time_list if not any(time == t for t in result_strs)
+            ]
             return new_time_list
         return time_list
     except Exception as e:
@@ -34,7 +52,7 @@ async def get_booked_times(appointment_date: date):
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
-@router.get('/find_applications')
+@router.get("/find_applications")
 async def get_applications_all():
     try:
 
@@ -46,15 +64,16 @@ async def get_applications_all():
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
-@router.post('/add')
+@router.post("/add")
 async def add_appointment(data: AppointmentData):
     try:
         # Проверка наличия даты в рабочие дни
         working_day_exists = WorkingDayDAO.find_one_or_none(date=data.appointment_date)
         if not working_day_exists:
             message = "Заявка может быть создана только в рабочие дни."
-            await bot.send_message(data.user_id, message)
-            raise ValueError(message)
+            raise HTTPException(status_code=409, detail=message)
+            # if settings.MODE != "TEST":
+            #     await bot.send_message(data.user_id, message)
 
         service = await ServiceDAO.find_all(service_name=data.service_name)
         if service:
@@ -64,13 +83,13 @@ async def add_appointment(data: AppointmentData):
                 appointment_date=data.appointment_date,
                 appointment_time=data.appointment_time,
                 user_id=data.user_id,
-                working_day_id=working_day_exists.id)
+                working_day_id=working_day_exists.id,
+            )
         else:
             raise HTTPException(status_code=404, detail="Service not found")
     except Exception as e:
         logger.error(f"Error adding appointment: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
-
 
 
 @router.post("/appointment", response_class=JSONResponse)
@@ -88,15 +107,19 @@ async def create_appointment(request: Request):
         raise HTTPException(status_code=422, detail="Validation error")
 
     try:
-        service_id_str, service_name = validated_data.service.split('_')
+        service_id_str, service_name = validated_data.service.split("_")
     except Exception as e:
         logger.error(f"Error parsing service field '{validated_data.service}': {e}")
         raise HTTPException(status_code=400, detail="Invalid service format")
     try:
-        working_day_id = await WorkingDayDAO.find_one_or_none(date=validated_data.appointment_date)
+        working_day_id = await WorkingDayDAO.find_one_or_none(
+            date=validated_data.appointment_date
+        )
+        if working_day_id is None:
+            raise HTTPException(status_code=409, detail="Working day not found")
     except Exception as e:
         logger.error(f"Error fetching working day id: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+        raise HTTPException(status_code=409, detail="Working day not found")
     try:
         result = await ApplicationDAO.add_appointment_if_available(
             user_id=validated_data.user_id,
@@ -104,7 +127,7 @@ async def create_appointment(request: Request):
             appointment_date=validated_data.appointment_date,
             appointment_time=validated_data.appointment_time,
             client_name=validated_data.name,
-            working_day_id=working_day_id.id
+            working_day_id=working_day_id.id,
         )
     except Exception as e:
         logger.error(f"Error adding appointment if available: {e}")
@@ -133,19 +156,29 @@ async def create_appointment(request: Request):
     # Отправка сообщений через бота с обработкой ошибок
     try:
         if validated_data.user_id:
-            kb = main_keyboard(user_id=validated_data.user_id, first_name=validated_data.name, has_phone=True)
-            await bot.send_message(chat_id=validated_data.user_id, text=message, reply_markup=kb)
+            kb = main_keyboard(
+                user_id=validated_data.user_id,
+                first_name=validated_data.name,
+                has_phone=True,
+            )
+            await bot.send_message(
+                chat_id=validated_data.user_id, text=message, reply_markup=kb
+            )
 
             if check_admin(validated_data.user_id):
                 admin_chat_id = check_admin(validated_data.user_id)
-                await bot.send_message(chat_id=admin_chat_id, text=admin_message, reply_markup=kb)
+                if settings.MODE != "TEST":
+                    await bot.send_message(
+                        chat_id=admin_chat_id, text=admin_message, reply_markup=kb
+                    )
     except Exception as e:
         logger.error(f"Error sending messages via bot or creating keyboard: {e}")
 
     if result:
         return {"status": "success", "message": "Заявка успешно создана"}
     else:
-        # В случае если результат не получен (например время занято), возвращаем соответствующий статус
+        # В случае если результат не получен (например время занято),
+        # возвращаем соответствующий статус
         message_busy = (
             f"🎉 <b>{validated_data.name}, "
             f"⏰ <b>Время записи:</b> {validated_data.appointment_time} Занято \n\n"
@@ -154,8 +187,14 @@ async def create_appointment(request: Request):
 
         try:
             if validated_data.user_id:
-                kb = main_keyboard(user_id=validated_data.user_id, first_name=validated_data.name, has_phone=True)
-                await bot.send_message(chat_id=validated_data.user_id, text=message_busy, reply_markup=kb)
+                kb = main_keyboard(
+                    user_id=validated_data.user_id,
+                    first_name=validated_data.name,
+                    has_phone=True,
+                )
+                await bot.send_message(
+                    chat_id=validated_data.user_id, text=message_busy, reply_markup=kb
+                )
         except Exception as e:
             logger.error(f"Error sending busy time message via bot: {e}")
 
@@ -164,6 +203,7 @@ async def create_appointment(request: Request):
 
 @router.delete("/delete", response_class=JSONResponse)
 async def delete_application(request: Request, application_id: int):
+    result = None
     try:
         result = await ApplicationDAO.find_one_or_none(id=application_id)
 
@@ -200,11 +240,15 @@ async def delete_application(request: Request, application_id: int):
             f"⏰ Время: {result.appointment_time}"
         )
 
-        kb = main_keyboard(user_id=result.user_id, first_name=result.client_name, has_phone=True)
+        kb = main_keyboard(
+            user_id=result.user_id, first_name=result.client_name, has_phone=True
+        )
 
         # Отправка сообщений через бота с обработкой ошибок
         try:
-            await bot.send_message(chat_id=result.user_id, text=message_user, reply_markup=kb)
+            await bot.send_message(
+                chat_id=result.user_id, text=message_user, reply_markup=kb
+            )
         except Exception as e:
             logger.error(f"Error sending message to user ID={result.user_id}: {e}")
 
@@ -217,5 +261,7 @@ async def delete_application(request: Request, application_id: int):
         return {"status": "success", "message": "Заявка успешно удалена"}
 
     except Exception as e:
-        logger.error(f"Unexpected error during deletion process for application ID={application_id}: {e}")
+        logger.error(
+            f"Unexpected error during deletion process for application ID={application_id}: {e}"
+        )
         return {"status": "fail"}

@@ -1,11 +1,12 @@
-
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 from app.config import settings
 
-bot = Bot(token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+bot = Bot(
+    token=settings.BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+)
 dp = Dispatcher()
 
 
@@ -14,8 +15,7 @@ async def start_bot():
     try:
 
         for admin_id in settings.ADMIN_LIST:
-            await bot.send_message(admin_id, f'Я запущен🥳.')
-
+            await bot.send_message(admin_id, f"Я запущен🥳.")
 
     except:
         pass
@@ -24,6 +24,6 @@ async def start_bot():
 async def stop_bot():
     try:
         for admin_id in settings.ADMIN_LIST:
-            await bot.send_message(admin_id, 'Бот остановлен. За что?😔')
+            await bot.send_message(admin_id, "Бот остановлен. За что?😔")
     except:
         pass

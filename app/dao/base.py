@@ -1,6 +1,7 @@
+from sqlalchemy import delete as sqlalchemy_delete
+from sqlalchemy import update as sqlalchemy_update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.future import select
-from sqlalchemy import update as sqlalchemy_update, delete as sqlalchemy_delete
 from sqlalchemy.orm import joinedload
 
 from app.database import async_session_maker
@@ -12,7 +13,8 @@ class BaseDAO:
     @classmethod
     async def find_one_or_none_by_id(cls, data_id: int):
         """
-        Асинхронно находит и возвращает один экземпляр модели по указанным критериям или None.
+        Асинхронно находит и возвращает один экземпляр модели по
+        указанным критериям или None.
 
         Аргументы:
             data_id: Критерии фильтрации в виде идентификатора записи.
@@ -28,10 +30,12 @@ class BaseDAO:
     @classmethod
     async def find_one_or_none(cls, **filter_by):
         """
-        Асинхронно находит и возвращает один экземпляр модели по указанным критериям или None.
+        Асинхронно находит и возвращает один экземпляр модели
+        по указанным критериям или None.
 
         Аргументы:
-            **filter_by: Критерии фильтрации в виде именованных параметров.
+            **filter_by: Критерии фильтрации в виде именованных
+            параметров.
 
         Возвращает:
             Экземпляр модели или None, если ничего не найдено.
@@ -60,16 +64,22 @@ class BaseDAO:
     @classmethod
     async def find_all_applications(cls, **filter_by):
         """
-        Асинхронно находит и возвращает все экземпляры модели, удовлетворяющие указанным критериям.
+        Асинхронно находит и возвращает все экземпляры модели,
+        удовлетворяющие указанным критериям.
 
         Аргументы:
-            **filter_by: Критерии фильтрации в виде именованных параметров.
+            **filter_by: Критерии фильтрации в виде именованных
+            параметров.
 
         Возвращает:
             Список экземпляров модели.
         """
         async with async_session_maker() as session:
-            query = select(cls.model).options(joinedload(cls.model.service)).filter_by(**filter_by)
+            query = (
+                select(cls.model)
+                .options(joinedload(cls.model.service))
+                .filter_by(**filter_by)
+            )
             result = await session.execute(query)
             return result.scalars().all()
 
@@ -79,7 +89,8 @@ class BaseDAO:
         Асинхронно создает новый экземпляр модели с указанными значениями.
 
         Аргументы:
-            **values: Именованные параметры для создания нового экземпляра модели.
+            **values: Именованные параметры для создания нового
+            экземпляра модели.
 
         Возвращает:
             Созданный экземпляр модели.
@@ -161,7 +172,9 @@ class BaseDAO:
         """
         if delete_all is False:
             if not filter_by:
-                raise ValueError("Необходимо указать хотя бы один параметр для удаления.")
+                raise ValueError(
+                    "Необходимо указать хотя бы один параметр для удаления."
+                )
 
         async with async_session_maker() as session:
             async with session.begin():

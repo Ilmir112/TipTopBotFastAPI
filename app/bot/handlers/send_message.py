@@ -1,37 +1,46 @@
 import asyncio
-from datetime import datetime, timedelta, time
+from datetime import datetime, time, timedelta
+
 import pytz
 
 from app.api.applications.router import get_applications_all
 from app.bot.create_bot import bot
 
 
-
 async def send_reminders():
     # Часовой пояс Екатеринбурга
-    ekaterinburg_tz = pytz.timezone('Asia/Yekaterinburg')
+    ekaterinburg_tz = pytz.timezone("Asia/Yekaterinburg")
 
     # Получить текущее время в Екатеринбурге
     now = datetime.now(ekaterinburg_tz)
 
     # Получаем все заявки с предварительной загрузкой связанного service
-    applications = await get_applications_all()  # Предполагается, что внутри этой функции используется joinedload для app.service
+    applications = (
+        await get_applications_all()
+    )  # Предполагается, что внутри этой функции используется joinedload для app.service
 
     # Получить текущее время для сравнения (чтобы не вызывать много раз)
     now_time = datetime.now(ekaterinburg_tz).time()
     if applications:
         for app in applications:
             # Объединяем дату и время записи
-            appointment_datetime = datetime.combine(app.appointment_date, app.appointment_time)
+            appointment_datetime = datetime.combine(
+                app.appointment_date, app.appointment_time
+            )
             appointment_datetime = ekaterinburg_tz.localize(appointment_datetime)
 
             delta = appointment_datetime - now
 
             # Напоминание за 24 часа (примерно)
-            if timedelta(hours=23, minutes=31) <= delta <= timedelta(hours=24, minutes=30):
+            if (
+                timedelta(hours=23, minutes=31)
+                <= delta
+                <= timedelta(hours=24, minutes=30)
+            ):
                 user_id = app.user_id
                 message = (
-                    f"🔔✨ Напоминание: у вас запланирована запись в шиномонтаж TIP-TOP на завтра"
+                    f"🔔✨ Напоминание: у вас запланирована запись "
+                    f"в шиномонтаж TIP-TOP на завтра"
                     f"на услугу {app.service.service_name} 🛎️\n "
                     f"📅 Дата: {app.appointment_date.strftime('%d.%m.%Y')} 🗓️\n"
                     f"🕒 Время: {app.appointment_time.strftime('%H:%M')}. ⏰"

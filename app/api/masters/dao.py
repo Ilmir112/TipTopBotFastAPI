@@ -1,5 +1,5 @@
-from app.dao.base import BaseDAO
 from app.api.masters.models import Master
+from app.dao.base import BaseDAO
 
 
 class MasterDAO(BaseDAO):

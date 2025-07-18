@@ -1,26 +1,27 @@
-from aiogram import Router, F, types
+from aiogram import F, Router, types
 from aiogram.enums import ContentType
-from aiogram.filters import CommandStart, StateFilter
-from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
+from aiogram.types import Message
 
 from app.api.users.dao import UsersDAO
 from app.api.users.dependencies import login_via_telegram
-
-
 from app.bot.keyboards.kbs import app_keyboard
-from app.bot.utils.utils import greet_user, get_about_us_text, user_has_phone
+from app.bot.utils.utils import get_about_us_text, greet_user
 from app.config import settings
 
 user_router = Router()
 
 from aiogram.fsm.state import State, StatesGroup
 
+
 class UserStates(StatesGroup):
     waiting_for_contact = State()
 
+
 def check_admin(user_id: int):
     return user_id if user_id in settings.ADMIN_LIST else None
+
 
 @user_router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
@@ -37,12 +38,12 @@ async def cmd_start(message: Message, state: FSMContext):
             first_name=message.from_user.first_name,
             username=message.from_user.username,
             telephone_number=None,
-            token=token)
+            token=token,
+        )
 
         await greet_user(message, is_new_user=True, has_phone=False)
     else:
         await greet_user(message, is_new_user=False, has_phone=False)
-
 
 
 @user_router.message(F.content_type.in_([ContentType.CONTACT]))
@@ -55,23 +56,28 @@ async def handle_contact(message: Message, state: FSMContext):
             phone_number = contact.phone_number
             # Обновляем номер телефона в базе данных
             await UsersDAO.update(
-                {'telegram_id': message.from_user.id},
-                telephone_number=phone_number
+                {"telegram_id": message.from_user.id}, telephone_number=phone_number
             )
             # Удаляем клавиатуру после получения контакта
-            await message.answer("Спасибо! Ваш номер сохранен.", reply_markup=types.ReplyKeyboardRemove())
+            await message.answer(
+                "Спасибо! Ваш номер сохранен.", reply_markup=types.ReplyKeyboardRemove()
+            )
             # Продолжаем взаимодействие (например, приветствие или переход к следующему шагу)
             await greet_user(message, is_new_user=False, has_phone=True)
             # После этого можно снова показать основную клавиатуру или выполнить другие действия
 
-@user_router.message(F.text == '🔙 Назад')
+
+@user_router.message(F.text == "🔙 Назад")
 async def cmd_back_home(message: Message) -> None:
     """
     Обрабатывает нажатие кнопки "Назад".
     """
     await greet_user(message, is_new_user=False, has_phone=True)
 
+
 @user_router.message(F.text == "ℹ️ О нас")
 async def about_us(message: Message):
-    kb = app_keyboard(user_id=message.from_user.id, first_name=message.from_user.first_name)
+    kb = app_keyboard(
+        user_id=message.from_user.id, first_name=message.from_user.first_name
+    )
     await message.answer(get_about_us_text(), reply_markup=kb)

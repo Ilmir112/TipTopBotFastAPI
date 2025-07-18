@@ -1,10 +1,11 @@
-from pydantic import BaseModel, Field, ConfigDict
 from datetime import date
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 # Модель для валидации данных
 class SWorkingDay(BaseModel):
-    working_day:  date = Field(..., description="Дата")
+    working_day: date = Field(..., description="Дата")
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 

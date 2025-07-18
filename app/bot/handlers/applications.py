@@ -1,10 +1,11 @@
 import re
 from datetime import datetime
-from aiogram.filters import StateFilter
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
+
 from aiogram import types
+from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from app.api.applications.dao import ApplicationDAO
 from app.api.applications.router import get_booked_times
@@ -29,7 +30,8 @@ class BookingStates(StatesGroup):
 
 # Кнопка для начала создания заявки (если нужно)
 create_admin_application_button = InlineKeyboardButton(
-    text="👨‍🦱 Создать заявку для пользователя", callback_data="start_create_application"
+    text="👨‍🦱 Создать заявку для пользователя",
+    callback_data="start_create_application",
 )
 
 
@@ -42,7 +44,7 @@ async def start_booking(callback: types.CallbackQuery, state: FSMContext):
 
 # Валидация номера телефона (пример)
 def validate_phone_number(phone: str) -> bool:
-    pattern = r'^\+?\d{10,15}$'  # пример: +1234567890 или 1234567890
+    pattern = r"^\+?\d{10,15}$"  # пример: +1234567890 или 1234567890
     return re.match(pattern, phone.strip()) is not None
 
 
@@ -52,7 +54,9 @@ async def process_name(message: Message, state: FSMContext):
 
     # Проверка валидности номера телефона
     if not validate_phone_number(phone):
-        await message.answer("Некорректный формат номера телефона. Пожалуйста, введите корректный номер:")
+        await message.answer(
+            "Некорректный формат номера телефона. Пожалуйста, введите корректный номер:"
+        )
         return  # остаться в этом же состоянии
 
     # Проверка наличия номера в базе
@@ -66,10 +70,12 @@ async def process_name(message: Message, state: FSMContext):
         # Получить список услуг и показать их
         services = await find_service_all()
         buttons = [
-            InlineKeyboardButton(text=service.service_name, callback_data=f"service_{service.service_id}")
+            InlineKeyboardButton(
+                text=service.service_name, callback_data=f"service_{service.service_id}"
+            )
             for service in services
         ]
-        rows = [buttons[i:i + 4] for i in range(0, len(buttons), 4)]
+        rows = [buttons[i : i + 4] for i in range(0, len(buttons), 4)]
         keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
         await message.answer("Пожалуйста, выберите услугу:", reply_markup=keyboard)
         await state.set_state(BookingStates.waiting_for_service)
@@ -87,12 +93,11 @@ async def process_telephone_number(message: Message, state: FSMContext):
     name = message.text
     user_data = await state.get_data()
 
-    telephone_number = user_data.get('telephone_number')
+    telephone_number = user_data.get("telephone_number")
 
     new_user_data = SUsers(
-        first_name=name,
-        username=telephone_number,
-        telephone_number=telephone_number)
+        first_name=name, username=telephone_number, telephone_number=telephone_number
+    )
 
     new_user = await register_user(new_user_data)
     if new_user is None:
@@ -104,12 +109,14 @@ async def process_telephone_number(message: Message, state: FSMContext):
     services = await find_service_all()
 
     buttons = [
-        InlineKeyboardButton(text=service.service_name, callback_data=f"service_{service.service_id}")
+        InlineKeyboardButton(
+            text=service.service_name, callback_data=f"service_{service.service_id}"
+        )
         for service in services
     ]
 
     # Группируем по 4 кнопки в строку
-    rows = [buttons[i:i + 4] for i in range(0, len(buttons), 4)]
+    rows = [buttons[i : i + 4] for i in range(0, len(buttons), 4)]
 
     # Создаем клавиатуру
     keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
@@ -128,7 +135,11 @@ async def service_chosen(callback_query: types.CallbackQuery, state: FSMContext)
         dates = await find_working_day_all()
 
         # Преобразовать даты в строки
-        date_strings = [date.strftime("%d.%m.%Y") for date in sorted(dates) if date >= datetime.now().date()]
+        date_strings = [
+            date.strftime("%d.%m.%Y")
+            for date in sorted(dates)
+            if date >= datetime.now().date()
+        ]
 
         # Создаем список списков кнопок
         buttons = [
@@ -137,7 +148,7 @@ async def service_chosen(callback_query: types.CallbackQuery, state: FSMContext)
         ]
 
         # Группируем по 4 кнопки в строку
-        rows = [buttons[i:i + 3] for i in range(0, len(buttons), 3)]
+        rows = [buttons[i : i + 3] for i in range(0, len(buttons), 3)]
 
         # Создаем клавиатуру из списка списков словарей
         keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
@@ -155,7 +166,9 @@ async def date_chosen(callback_query: types.CallbackQuery, state: FSMContext):
         await state.update_data(appointment_date=appointment_date)
 
         # Получить занятые времена на выбранную дату
-        booked_times = await get_booked_times(appointment_date)  # вызов API /get_booked_times
+        booked_times = await get_booked_times(
+            appointment_date
+        )  # вызов API /get_booked_times
 
         buttons = [
             InlineKeyboardButton(text=time_str, callback_data=f"time_{time_str}")
@@ -163,7 +176,7 @@ async def date_chosen(callback_query: types.CallbackQuery, state: FSMContext):
         ]
 
         # Группируем по 4 кнопки в строку
-        rows = [buttons[i:i + 4] for i in range(0, len(buttons), 4)]
+        rows = [buttons[i : i + 4] for i in range(0, len(buttons), 4)]
 
         # Создаем клавиатуру
         keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
@@ -181,21 +194,22 @@ async def time_chosen(callback_query: types.CallbackQuery, state: FSMContext):
 
         user_data = await state.get_data()
 
-        name = user_data.get('name')
-        user_id = user_data.get('user_id')
+        name = user_data.get("name")
+        user_id = user_data.get("user_id")
 
-        service_id = user_data.get('service_id')
-        appointment_date = user_data.get('appointment_date')
+        service_id = user_data.get("service_id")
+        appointment_date = user_data.get("appointment_date")
 
         working_day = await WorkingDayDAO.find_one_or_none(date=appointment_date)
         appointment_date = appointment_date.strftime("%d.%m.%Y")
-        success = await ApplicationDAO.add_appointment_if_available(client_name=name,
-                                                                    service_id=service_id,
-                                                                    appointment_date=datetime.strptime(appointment_date,
-                                                                                                       "%d.%m.%Y").date(),
-                                                                    appointment_time=appointment_time,
-                                                                    user_id=user_id,
-                                                                    working_day_id=working_day.id)
+        success = await ApplicationDAO.add_appointment_if_available(
+            client_name=name,
+            service_id=service_id,
+            appointment_date=datetime.strptime(appointment_date, "%d.%m.%Y").date(),
+            appointment_time=appointment_time,
+            user_id=user_id,
+            working_day_id=working_day.id,
+        )
 
         if success:
             # Отправить подтверждение пользователю и админу
@@ -206,7 +220,8 @@ async def time_chosen(callback_query: types.CallbackQuery, state: FSMContext):
                 # f"✂️ <b>Мастер:</b> {master_name}\n"
                 f"📅 <b>Дата записи:</b> {appointment_date}\n"
                 f"⏰ <b>Время записи:</b> {appointment_time}\n\n"
-                "Спасибо за выбор нашего шиномонтажа! ✨ Мы ждём вас в назначенное время."
+                "Спасибо за выбор нашего шиномонтажа!"
+                " ✨ Мы ждём вас в назначенное время."
             )
 
             # Сообщение администратору
@@ -217,7 +232,6 @@ async def time_chosen(callback_query: types.CallbackQuery, state: FSMContext):
                 # f"✂️ Мастер: {master_name}\n"
                 f"📅 Дата: {appointment_date}\n"
                 f"⏰ Время: {appointment_time}"
-
             )
             if user_id:
                 if user_id > 52565458:
@@ -229,4 +243,6 @@ async def time_chosen(callback_query: types.CallbackQuery, state: FSMContext):
             await state.clear()
         else:
             # Время занято или ошибка — повторный выбор или сообщение об ошибке.
-            await callback_query.message.edit_text("Это время уже занято. Пожалуйста, выберите другое.")
+            await callback_query.message.edit_text(
+                "Это время уже занято. Пожалуйста, выберите другое."
+            )
