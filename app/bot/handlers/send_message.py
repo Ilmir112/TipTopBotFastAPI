@@ -54,6 +54,6 @@ async def send_reminders():
                     user_id = app.user_id
                     message = (
                         f"🌅 Доброе утро! ☀️ Напоминаем о вашей записи сегодня в шиномонтаж TIP-TOP"
-                        f"в {app.appointment_time.strftime('%H:%M')} 📅🕒 на услугу {app.service.name} 🛎️"
+                        f"в {app.appointment_time.strftime('%H:%M')} 📅🕒 на услугу {app.service.service_name} 🛎️"
                     )
                     await bot.send_message(user_id, message)
