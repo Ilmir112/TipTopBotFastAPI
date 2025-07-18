@@ -10,7 +10,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.api.users.models import Users
 from app.database import Base
 
 

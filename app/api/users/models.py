@@ -26,10 +26,6 @@ class Users(Base):
         "SuperUsers", back_populates="user", foreign_keys="[SuperUsers.telegram_id]"
     )
 
-    def __init__(self, **kw: Any):
-        super().__init__(kw)
-        self.access_level = None
-
     @field_validator('telephone_number')
     def validate_telephone_number(cls, v):
         # Удаляем все нецифровые символы
