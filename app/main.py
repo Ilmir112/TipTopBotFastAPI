@@ -157,7 +157,7 @@ app.add_middleware(
 #     response = await call_next(request)
 #     return response
 
-admin = Admin(app, engine, authentication_backend=authentication_backend)
+admin = Admin(app, engine, authentication_backend=authentication_backend, base_url="/tiptop")
 
 admin.add_view(UserAdmin)
 # admin.add_view(MastersAdmin)
