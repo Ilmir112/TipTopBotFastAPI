@@ -20,7 +20,6 @@ async def process_message(message: aio_pika.IncomingMessage):
         # Например, сохранить в базу, отправить уведомление и т.д.
         # После выхода из блока message.process() сообщение будет подтверждено и удалено из очереди
 
-
 async def start_consumer():
     connection = await aio_pika.connect_robust(settings.rabbitmq_url)
     async with connection:
