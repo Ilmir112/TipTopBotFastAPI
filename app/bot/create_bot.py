@@ -11,12 +11,9 @@ dp = Dispatcher()
 
 
 async def start_bot():
-
     try:
-
         for admin_id in settings.ADMIN_LIST:
             await bot.send_message(admin_id, f"Я запущен🥳.")
-
     except:
         pass
 

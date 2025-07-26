@@ -27,10 +27,11 @@ from app.bot.create_bot import bot, dp, start_bot, stop_bot
 from app.bot.handlers.admin_router import admin_router
 from app.bot.handlers.send_message import send_reminders
 from app.bot.handlers.user_router import user_router
-from app.config import settings
+from app.config import settings, router_broker
 from app.database import engine
 from app.logger import logger
 from app.pages.router import router as router_pages
+from app.rabbit.consumer import start_consumer
 
 scheduler = AsyncIOScheduler()
 
@@ -51,6 +52,8 @@ async def lifespan(app: FastAPI):
     logging.info("Starting bot setup...")
     dp.include_router(user_router)
     dp.include_router(admin_router)
+    consumer_task = asyncio.create_task(start_consumer())
+    logging.info("broker start.")
     await start_bot()
     webhook_url = settings.get_webhook_url()
 
@@ -65,6 +68,13 @@ async def lifespan(app: FastAPI):
     await bot.delete_webhook()
     await stop_bot()
     logging.info("Webhook deleted")
+    if consumer_task:
+        consumer_task.cancel()
+        try:
+            await consumer_task
+        except asyncio.CancelledError:
+            print("Потребитель остановлен")
+    print("Завершение работы приложения")
 
 
 async def setup_webhook(webhook_url):
@@ -86,9 +96,10 @@ async def setup_webhook(webhook_url):
 
 
 app = FastAPI(lifespan=lifespan)
-
-app.mount("/static", StaticFiles(directory="app/static"), "static")
-# app.mount('/static', StaticFiles(directory='static'), 'static')
+try:
+    app.mount("/static", StaticFiles(directory="app/static"), "static")
+except Exception as e:
+    app.mount('/static', StaticFiles(directory='static'), 'static')
 
 
 @app.post("/webhook")
@@ -150,12 +161,14 @@ app.add_middleware(
     ],
 )
 
-# @app.middleware("http")
-# async def log_requests(request: Request, call_next):
-#     body = await request.body()
-#     logging.info(f"Received request: {request.method} {request.url} headers: {request.headers} body: {body}")
-#     response = await call_next(request)
-#     return response
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    body = await request.body()
+    logging.info(f"Received request: {request.method} {request.url} headers: {request.headers} body: {body}")
+    response = await call_next(request)
+    return response
+
 
 admin = Admin(app, engine, authentication_backend=authentication_backend, base_url="/tiptop")
 

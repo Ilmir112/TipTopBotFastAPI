@@ -8,6 +8,7 @@ from app.api.users.models import SuperUsers
 from app.api.users.schemas import SUsers, SUsersAuth, SUsersRegister
 from app.bot.create_bot import bot
 from app.config import settings
+from app.rabbit.producer import send_message_to_queue
 from app.exceptions import IncorectLoginOrPassword, UserAlreadyExistsException
 from app.logger import logger
 
@@ -41,7 +42,6 @@ async def register_user(user_data: SUsers):
             status_code=500, detail="Внутренняя ошибка сервера при регистрации"
         )
 
-
 @router.post("/register_super_user")
 async def register_super_user(user_data: SUsersRegister):
     try:
@@ -52,6 +52,8 @@ async def register_super_user(user_data: SUsersRegister):
             raise UserAlreadyExistsException
 
         hashed_password = get_password_hash(user_data.password)
+        await send_message_to_queue(existing_user,"tiptop")
+
         result = await SuperUsersDAO.add(
             login_user=user_data.login_user,
             name_user=user_data.name_user,
