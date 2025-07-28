@@ -52,7 +52,7 @@ async def lifespan(app: FastAPI):
     logging.info("Starting bot setup...")
     dp.include_router(user_router)
     dp.include_router(admin_router)
-    consumer_task = asyncio.create_task(start_consumer())
+    # consumer_task = asyncio.create_task(start_consumer())
     logging.info("broker start.")
     await start_bot()
     webhook_url = settings.get_webhook_url()
@@ -68,12 +68,12 @@ async def lifespan(app: FastAPI):
     await bot.delete_webhook()
     await stop_bot()
     logging.info("Webhook deleted")
-    if consumer_task:
-        consumer_task.cancel()
-        try:
-            await consumer_task
-        except asyncio.CancelledError:
-            print("Потребитель остановлен")
+    # if consumer_task:
+    #     consumer_task.cancel()
+    #     try:
+    #         await consumer_task
+    #     except asyncio.CancelledError:
+    #         print("Потребитель остановлен")
     print("Завершение работы приложения")
 
 
