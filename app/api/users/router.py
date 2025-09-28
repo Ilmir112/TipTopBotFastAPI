@@ -11,8 +11,48 @@ from app.config import settings
 from app.rabbit.producer import send_message_to_queue
 from app.exceptions import IncorectLoginOrPassword, UserAlreadyExistsException
 from app.logger import logger
+from app.config import router_broker
+from app.api.users.schemas import STelegramUser
+from app.api.users.auth import verify_telegram_authorization
 
 router = APIRouter(prefix="/auth", tags=["Auth & пользователи"])
+
+
+@router.post("/telegram-login")
+async def telegram_login(response: Response, user_data: STelegramUser):
+    try:
+        logger.info(f"DEBUG Router: user_data received: {user_data}")
+        logger.info(f"DEBUG Router: user_data.model_dump(): {user_data.model_dump()}")
+        if not verify_telegram_authorization(user_data.model_dump()):
+            raise HTTPException(status_code=403, detail="Неверные данные Telegram авторизации")
+
+        user = await UsersDAO.find_one_or_none(telegram_id=user_data.id)
+
+        if not user:
+            user = await UsersDAO.add(
+                telegram_id=user_data.telegram_id,
+                username=user_data.username or f"telegram_user_{user_data.id}",
+                first_name=user_data.first_name or "",
+                last_name=user_data.last_name or "",
+                telephone_number=None,
+            )
+            logger.info(f"New Telegram user registered: {user.username}")
+        else:
+            await UsersDAO.update(filter_by={"telegram_id": user.telegram_id},
+                username=user_data.username or user.username,
+                first_name=user_data.first_name or user.first_name,
+            )
+            logger.info(f"Telegram user updated: {user.username}")
+
+        access_token = create_access_token({"sub": str(user.telegram_id)})
+        response.set_cookie(settings.COOKIE_NAME, access_token, httponly=True, samesite="Lax")
+
+        return {"telegram_id": user.telegram_id, "access_token": access_token}
+    except HTTPException as e:
+        raise
+    except Exception as e:
+        logger.error(f"Critical error during Telegram login {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Внутренняя ошибка сервера при входе через Telegram")
 
 
 @router.post("/register")
@@ -52,7 +92,7 @@ async def register_super_user(user_data: SUsersRegister):
             raise UserAlreadyExistsException
 
         hashed_password = get_password_hash(user_data.password)
-        await send_message_to_queue(existing_user,"tiptop")
+        await send_message_to_queue(router_broker, existing_user,"tiptop")
 
         result = await SuperUsersDAO.add(
             login_user=user_data.login_user,

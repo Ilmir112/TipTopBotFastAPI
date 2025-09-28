@@ -14,6 +14,16 @@ class SUsers(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
+class STelegramUser(BaseModel):
+    id: int
+    first_name: str | None = None
+    last_name: str | None = None
+    username: str | None = None
+    photo_url: str | None = None
+    auth_date: int
+    hash: str
+
+
 class SUsersRegister(BaseModel):
     login_user: str = Field(..., min_length=2, max_length=50, description="Логин")
     name_user: str = Field(..., min_length=2, max_length=50, description="имя")

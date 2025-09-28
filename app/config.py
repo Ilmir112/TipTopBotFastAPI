@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     # DATABASE_URL: str = None
 
     BOT_TOKEN: str
+    TELEGRAM_BOT_USERNAME: str
     BASE_SITE: str
     ADMIN_LIST: list
     ADMIN_ID: str
@@ -68,6 +69,7 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str
     ALGORITHM: str
+    COOKIE_NAME: str = "booking_access_token"
 
     TOKEN: str
     CHAT_ID: str
@@ -76,12 +78,16 @@ class Settings(BaseSettings):
     # model_config = ConfigDict(env_file = '../.env')
 
 
+settings = Settings()
+
+print(f"DEBUG: BASE_SITE from settings: {settings.BASE_SITE}")
+print(f"DEBUG: TELEGRAM_BOT_USERNAME from settings: {settings.TELEGRAM_BOT_USERNAME}")
+
+router_broker = RabbitBroker(url=settings.rabbitmq_url)
+
 try:
-    # Создайте экземпляр класса Settings
-    settings = Settings()
     log_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "log.txt")
     # logger.add(log_file_path, format=settings.FORMAT_LOG, level="INFO", rotation=settings.LOG_ROTATION)
-    router_broker = RabbitBroker(url=settings.rabbitmq_url)
     # scheduler = AsyncIOScheduler(jobstores={'default': SQLAlchemyJobStore(url=settings.STORE_URL)})
 
     # Для проверки

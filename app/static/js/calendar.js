@@ -1,6 +1,9 @@
 let previousSelectedDates = [];
 
+console.log("calendar.js loaded.");
+
 // Инициализация flatpickr
+console.log("Initializing flatpickr...");
 const datePicker = flatpickr("#datePicker", {
     mode: "multiple",
     dateFormat: "Y-m-d",
@@ -14,6 +17,7 @@ const datePicker = flatpickr("#datePicker", {
         updateSelectedDatesList(selectedDates);
     }
 });
+console.log("flatpickr initialized.");
 
 function markDayAsActive(dateStr) {
     // Находим элемент по дате
@@ -132,6 +136,8 @@ async function loadExistingDays() {
 // Теперь убрана функция addWorkingDays и обработчик кнопки
 
 // Загружаем существующие дни при старте приложения
+console.log("Loading existing days...");
 loadExistingDays();
+console.log("loadExistingDays() called.");
 
 // Если нужно, можно добавить автоматическую синхронизацию или другие триггеры

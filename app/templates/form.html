@@ -19,7 +19,7 @@
 
             <div class="form-group">
                 <label for="name">Имя</label>
-                <input type="text" id="name" name="name" value="{{ first_name }}" required
+                <input type="text" id="name" name="name" value="{{ first_name }}" required readonly
                        placeholder="Введите ваше имя">
             </div>
 
@@ -77,7 +77,7 @@
             </div>
 
 
-            <input type="hidden" id="user_id" value="{{ user_id }}">
+            <input type="hidden" id="user_id" name="user_id" value="{{ user_id }}">
             <button type="submit" class="btn">Записаться</button>
         </form>
     </main>
@@ -101,6 +101,7 @@
             flatpickr("#date", {
                 dateFormat: "Y-m-d",
                 enable: workingDays,
+                minDate: "today", // Добавлено: Запрет выбора прошедших дат
                 locale: "ru", // указываем русский язык
                 appendTo: document.body,
             });

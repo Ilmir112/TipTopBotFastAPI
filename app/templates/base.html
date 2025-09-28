@@ -4,12 +4,101 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Приложение{% endblock %}</title>
-    {% block styles %}{% endblock %}
+    {% block styles %}
+        {# <link rel="stylesheet" href="/static/css/telegram_login.css"> #}
+        <style>
+            .modal {
+                display: none; /* Скрыто по умолчанию */
+                /* position: fixed; Оставаться на месте */
+                z-index: 1; /* Поверх всего */
+                left: 0;
+                top: 0;
+                width: 100%; /* Полная ширина */
+                height: 100%; /* Полная высота */
+                overflow: auto; /* Включить прокрутку, если содержимое слишком большое */
+                background-color: rgba(0,0,0,0.6); /* Черный с прозрачностью */
+                display: flex; /* Использовать flexbox для центрирования содержимого */
+                align-items: center; /* Центрирование по вертикали */
+                justify-content: center; /* Центрирование по горизонтали */
+            }
+
+            .modal-content {
+                background-color: #fefefe;
+                margin: auto; /* Автоматические отступы для центрирования */
+                padding: 20px;
+                border: 1px solid #888;
+                width: 80%; /* Может быть скорректировано */
+                max-width: 500px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                text-align: center;
+            }
+        </style>
+    {% endblock %}
 </head>
 <body>
 {% block content %} {% endblock %}
 
+<div id="telegramLoginModal" class="modal">
+    <div class="modal-content">
+        <!-- Content from login_telegram.html will be loaded here -->
+    </div>
+</div>
+
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
-{% block scripts %} {% endblock %}
+{% block scripts %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Проверяем, если текущий URL — это страница входа через Telegram
+            if (window.location.pathname === '/pages/telegram_login') {
+                const modal = document.getElementById('telegramLoginModal');
+                const modalContent = modal.querySelector('.modal-content');
+
+                // Загружаем содержимое страницы входа через AJAX
+                fetch('/pages/telegram_login')
+                    .then(response => response.text())
+                    .then(html => {
+                        modalContent.innerHTML = html;
+                        modal.style.display = 'flex'; // Показываем модальное окно
+                        // Изменяем URL в браузере, чтобы он соответствовал фактическому контенту, но без перезагрузки
+                        history.replaceState(null, '', '/');
+                    })
+                    .catch(error => {
+                        console.error('Ошибка при загрузке страницы входа через Telegram:', error);
+                        alert('Произошла ошибка при загрузке страницы входа. Пожалуйста, попробуйте еще раз.');
+                    });
+            }
+        });
+
+        // Перехват отправки формы Telegram-виджета для обновления страницы
+        function onTelegramAuth(user) {
+            // Существующая логика отправки данных на бэкенд
+            fetch('/auth/telegram-login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(user),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.access_token) {
+                    document.cookie = `access_token=${data.access_token}; path=/; httponly; samesite=Lax`;
+                    const modal = document.getElementById('telegramLoginModal');
+                    if (modal) {
+                        modal.style.display = 'none'; // Скрываем модальное окно
+                    }
+                    window.location.href = '/'; // Перенаправляем на главную страницу после успешного входа
+                } else {
+                    alert('Ошибка входа: ' + (data.detail || 'Неизвестная ошибка'));
+                }
+            })
+            .catch(error => {
+                console.error('Ошибка:', error);
+                alert('Произошла ошибка при входе через Telegram.');
+            });
+        }
+    </script>
+{% endblock %}
 </body>
 </html>

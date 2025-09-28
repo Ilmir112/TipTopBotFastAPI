@@ -71,49 +71,17 @@ async def find_applications_by_date(working_day: date):
         logger.error(f"Unexpected error in find_working_by_date: {e}", exc_info=True)
 
 
-@router.get("/find_all")
-async def find_working_day_all():
-    try:
-        result = await WorkingDayDAO.find_all()
-        if not result:
-            return []
-
-        today = datetime.now().date()
-        valid_days = [day for day in result if day.date >= today]
-        dates_list = list(map(lambda x: x.date, valid_days))
-
-        new_dates = []
-        for dt in dates_list:
-            try:
-                times = await get_booked_times(dt)
-                if times:
-                    new_dates.append(dt)
-            except Exception as e:
-                logger.error(
-                    f"Error fetching booked times for {dt}: {e}", exc_info=True
-                )
-
-        return new_dates
-    except SQLAlchemyError as e:
-        logger.error(f"Database error in find_working_day_all: {e}", exc_info=True)
-        return JSONResponse(status_code=500, content={"detail": "Ошибка базы данных"})
-    except Exception as e:
-        logger.error(f"Unexpected error in find_working_day_all: {e}", exc_info=True)
-        return JSONResponse(
-            status_code=500, content={"detail": "Внутренняя ошибка сервера"}
-        )
-
-
 @router.post("/add")
 async def add_working_day(request: Request, working_day: WorkingDaysInput):
     date_value = None
     admin_id = None
     try:
-        if isinstance(working_day, str):
-            date_obj = datetime.strptime(working_day, "%Y-%m-%d").date()
-        else:
-            date_value = working_day.working_day
-            date_obj = date_value
+        # Логика определения date_obj из working_day
+        date_obj = working_day.working_day # Теперь working_day всегда объект WorkingDaysInput
+
+        # Добавляем валидацию: нельзя добавить прошедшую дату
+        if date_obj < datetime.now().date():
+            return JSONResponse(status_code=400, content={"detail": "Нельзя добавить прошедшую дату"})
 
         existing_day = await WorkingDayDAO.find_one_or_none(date=date_obj)
         if not existing_day:
@@ -133,6 +101,8 @@ async def add_working_day(request: Request, working_day: WorkingDaysInput):
                     )
 
             return {"status": "success"}
+        else:
+            return JSONResponse(status_code=409, content={"detail": "Рабочий день уже существует"})
     except SQLAlchemyError as db_err:
         msg = f"Database Exception work_day {db_err}"
         logger.error(msg, extra={"working_day": date_value}, exc_info=True)

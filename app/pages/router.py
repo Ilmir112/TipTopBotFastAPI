@@ -2,7 +2,7 @@ import hmac
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from fastapi.requests import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -15,9 +15,11 @@ from app.api.users.dao import UsersDAO
 from app.api.working_day.dao import WorkingDayDAO
 from app.config import settings
 from app.logger import logger
+from app.api.users.dependencies import get_current_user
+import os
 
-router = APIRouter(prefix="", tags=["Фронтенд"])
-templates = Jinja2Templates(directory="app/templates")
+router = APIRouter(prefix="/pages", tags=["Страницы"])
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates"))
 
 
 # templates = Jinja2Templates(directory='templates')
@@ -37,16 +39,16 @@ async def telegram_callback(
     if not is_correct:
         return PlainTextResponse('Authorization failed. Please try again', status_code=401)
 
-    token = jwt.encode({'alg': 'HS256'}, {'k': user_id}, JWT_SECRET_KEY)
+    token = jwt.encode({'alg': 'HS256'}, {'k': user_id}, settings.SECRET_KEY)
     response = RedirectResponse(next_url)
-    response.set_cookie(key=COOKIE_NAME, value=token)
+    response.set_cookie(key=settings.COOKIE_NAME, value=token)
     return response
 
 
 @router.get('/logout')
 async def logout():
     response = RedirectResponse('/')
-    response.delete_cookie(key=COOKIE_NAME)
+    response.delete_cookie(key=settings.COOKIE_NAME)
     return response
 
 
@@ -55,9 +57,45 @@ async def unknown(path: str):
     return PlainTextResponse('Not found', status_code=404)
 
 
-@router.get("/index", response_class=HTMLResponse)
-async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "title": ""})
+@router.get("/base", response_class=HTMLResponse)
+async def get_base_page(request: Request):
+    return templates.TemplateResponse("base.html", {"request": request})
+
+
+@router.get("/form", response_class=HTMLResponse)
+async def get_form_page(request: Request, current_user: Annotated[dict, Depends(get_current_user)]):
+    work_days = await WorkingDayDAO.find_all()
+    working_days_formatted = [d.date.strftime("%Y-%m-%d") for d in work_days]
+    services = await ServiceDAO.find_all() # Получаем список услуг
+    user_first_name = current_user.first_name # Получаем имя пользователя напрямую из объекта Users
+    user_id = current_user.telegram_id # Получаем ID пользователя
+    return templates.TemplateResponse("form.html", {"request": request, "working_days": working_days_formatted, "services": services, "first_name": user_first_name, "user_id": user_id})
+
+
+@router.get("/calendar", response_class=HTMLResponse)
+async def get_calendar_page(request: Request):
+    return templates.TemplateResponse("calendar.html", {"request": request})
+
+
+@router.get("/applications", response_class=HTMLResponse)
+async def get_applications_page(request: Request):
+    return templates.TemplateResponse("applications.html", {"request": request})
+
+
+@router.get("/admin/applications", response_class=HTMLResponse)
+async def get_admin_applications_page(request: Request):
+    return templates.TemplateResponse("applications_admin.html", {"request": request})
+
+
+@router.get("/telegram_login", response_class=HTMLResponse)
+async def get_telegram_login_page(request: Request):
+    # Возвращаем только HTML-содержимое для вставки в модальное окно
+    return templates.TemplateResponse("login_telegram.html", {"request": request, "bot_username": settings.TELEGRAM_BOT_USERNAME})
+
+
+@router.get("/auth_telegram", response_class=HTMLResponse)
+async def get_auth_telegram_page(request: Request):
+    return templates.TemplateResponse("auth_telegram.html", {"request": request})
 
 
 @router.get("/work_days", response_class=HTMLResponse)
@@ -74,28 +112,6 @@ async def read_work_days_root(request: Request, user_id: int):
             }
 
             return templates.TemplateResponse("calendar.html", data_page)
-    except Exception as e:
-        logger.error(e)
-
-
-@router.get("/form", response_class=HTMLResponse)
-async def read_root(request: Request, user_id: int = None, first_name: str = None):
-    try:
-        services = await ServiceDAO.find_all()
-        working_days = await WorkingDayDAO.find_all()
-        working_days = list(map(lambda x: x.date.strftime("%Y-%m-%d"), working_days))
-
-        data_page = {
-            "request": request,
-            "user_id": user_id,
-            "first_name": first_name,
-            "title": "Запись на шиномонтаж",
-            # "masters": masters,
-            "services": services,
-            "working_days": working_days,
-        }
-
-        return templates.TemplateResponse("form.html", data_page)
     except Exception as e:
         logger.error(e)
 

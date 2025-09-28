@@ -1,23 +1,27 @@
 import asyncio
 import logging
 from contextlib import asynccontextmanager
+from datetime import date, timedelta
+from typing import Optional
 
 import aiogram
 import uvicorn
 from aiogram.types import Update
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status, Depends, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from sqladmin import Admin
 from starlette.middleware.cors import CORSMiddleware
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, RedirectResponse
+from faststream.rabbit import RabbitBroker
 
 from app.api.admin.auth import authentication_backend
-
+from app.api.users.models import Users
 # from app.api.admin.views import MastersAdmin
 from app.api.admin.views import ApplicationAdmin, ServiceAdmin, UserAdmin
 from app.api.applications.router import router as router_applications
+from app.api.working_day.dao import WorkingDayDAO
 
 # from app.api.masters.router import router as router_masters
 from app.api.service.router import router as router_service
@@ -32,13 +36,49 @@ from app.database import engine
 from app.logger import logger
 from app.pages.router import router as router_pages
 from app.rabbit.consumer import start_consumer
+from app.api.users.dependencies import get_current_user, get_optional_current_user
+from app.exceptions import TokenAbsentException, UnauthorizedException
 
 scheduler = AsyncIOScheduler()
+
+
+async def check_and_notify_working_days():
+    today = date.today()
+    # Определяем следующее воскресенье
+    days_until_sunday = (6 - today.weekday() + 7) % 7 # 0=понедельник, 6=воскресенье
+    next_sunday = today + timedelta(days=days_until_sunday)
+
+    # Проверяем рабочие дни на следующую неделю (например, с понедельника по воскресенье следующей недели)
+    next_week_start = next_sunday + timedelta(days=1) # Понедельник следующей недели
+    next_week_end = next_week_start + timedelta(days=6) # Воскресенье следующей недели
+
+    missing_days = []
+    for i in range(7):
+        current_day = next_week_start + timedelta(days=i)
+        existing_day = await WorkingDayDAO.find_one_or_none(date=current_day)
+        if not existing_day:
+            missing_days.append(current_day.strftime("%Y-%m-%d"))
+
+    if missing_days:
+        message = "Напоминание: следующие рабочие дни на следующую неделю не установлены:\n"
+        message += "\n".join(missing_days)
+        message += "\nПожалуйста, добавьте их."
+        
+        if settings.MODE != "TEST":
+            for admin_id in settings.ADMIN_LIST:
+                try:
+                    await bot.send_message(chat_id=admin_id, text=message)
+                except Exception as e_bot:
+                    logging.error(f"Ошибка при отправке сообщения бота администратору {admin_id}: {e_bot}", exc_info=True)
+    else:
+        logging.info("Все рабочие дни на следующую неделю установлены.")
 
 
 async def start_scheduler():
     if not scheduler.running:
         scheduler.add_job(send_reminders, "interval", hours=1)
+        scheduler.add_job(check_and_notify_working_days, "cron", day_of_week='sun', hour=20) # 20:00 каждое воскресенье
+        scheduler.add_job(check_and_notify_working_days, "cron", day_of_week='sun', hour=21) # 21:00 каждое воскресенье
         scheduler.start()
 
 
@@ -137,6 +177,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         },
     )
 
+
+@app.get("/", response_class=RedirectResponse, status_code=status.HTTP_302_FOUND)
+async def root(request: Request, current_user: Optional[Users] = Depends(get_optional_current_user)):
+    if current_user:
+        return RedirectResponse(url="/pages/form", status_code=status.HTTP_302_FOUND)
+    else:
+        return RedirectResponse(url="/pages/telegram_login", status_code=status.HTTP_302_FOUND)
 
 app.include_router(router_pages)
 # app.include_router(router_masters)

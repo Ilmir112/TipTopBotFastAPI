@@ -1,25 +1,111 @@
- #selectedDatesList {
-            margin-top: 20px;
-            list-style-type: none;
-            padding: 0;
-        }
-        .date-item {
-            margin: 5px 0;
-        }
-        .remove-date {
-            color: red;
-            cursor: pointer;
-        }
-
-        /* calendar.css */
-.has-application .flatpickr-day {
-    background-color: #4CAF50; /* зеленый цвет */
-    color: white;
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
 }
 
-.day.has-records {
-    background-color: red !important;
+main {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    max-width: 800px;
+    width: 100%;
+    text-align: center;
 }
-.day.no-records {
-    background-color: green !important;
+
+h1 {
+    color: #2c3e50;
+    margin-bottom: 30px;
+}
+
+/* Flatpickr input styling */
+#datePicker {
+    width: calc(100% - 40px);
+    padding: 12px 15px;
+    margin-bottom: 25px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#datePicker:focus {
+    border-color: #007bff;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 0 8px rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* Flatpickr calendar overrides */
+.flatpickr-calendar {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    border: none;
+    z-index: 9999; /* Добавлено для отображения поверх других элементов */
+}
+
+.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange, .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover, .flatpickr-day.selected.prevMonth, .flatpickr-day.startRange.prevMonth, .flatpickr-day.endRange.prevMonth, .flatpickr-day.selected.nextMonth, .flatpickr-day.startRange.nextMonth, .flatpickr-day.endRange.nextMonth {
+    background: #28a745; /* Зеленый для выбранных дат */
+    border-color: #28a745;
+}
+
+.flatpickr-day.today {
+    border-color: #007bff; /* Синий для сегодняшней даты */
+}
+
+.flatpickr-day.disabled, .flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay {
+    color: #bbb; /* Более светлый цвет для отключенных/прошедших дат */
+    opacity: 0.7;
+}
+
+.flatpickr-day.disabled:hover {
+    background: transparent; /* Не менять фон при наведении на отключенные даты */
+    cursor: not-allowed;
+}
+
+/* Selected dates list styling */
+h2 {
+    color: #2c3e50;
+    margin-top: 30px;
+    margin-bottom: 15px;
+}
+
+#selectedDatesList {
+    list-style-type: none;
+    padding: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+#selectedDatesList li {
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#selectedDatesList li:last-child {
+    border-bottom: none;
+}
+
+.remove-date {
+    color: #dc3545;
+    cursor: pointer;
+    font-weight: bold;
+    transition: color 0.2s ease;
+}
+
+.remove-date:hover {
+    color: #c82333;
 }

@@ -1,0 +1,105 @@
+<div class="login-container">
+    {# <h1>Войти через Telegram</h1> #}
+    <div class="telegram-login-button">
+        <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="{{ bot_username }}" data-size="large" data-onauth="onTelegramAuth(user)" data-request-access="write"></script>
+        <script type="text/javascript">
+            function onTelegramAuth(user) {
+                // alert('Logged in as ' + user.first_name + ' ' + user.last_name + ' (' + user.id + (user.username ? ', @' + user.username : '') + ')');
+                // Отправьте данные пользователя на ваш бэкенд
+                fetch('/auth/telegram-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(user),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.access_token) {
+                        // Сохраните токен и перенаправьте пользователя
+                        document.cookie = `access_token=${data.access_token}; path=/; httponly; samesite=Lax`;
+                        window.location.href = '/'; // Или на другую страницу после входа
+                    } else {
+                        alert('Ошибка входа: ' + (data.detail || 'Неизвестная ошибка'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка:', error);
+                    alert('Произошла ошибка при входе через Telegram.');
+                });
+            }
+        </script>
+    </div>
+</div>
+
+<style>
+    html {
+        height: 100% !important;
+        background-color: black !important; /* Черный фон */
+        background-image: url('/static/img/photo.jpg') !important; /* Фоновое изображение */
+        background-size: contain !important; /* Изображение полностью помещается в область */
+        background-position: center center !important; /* Центрировать изображение */
+        background-repeat: no-repeat !important; /* Не повторять изображение */
+    }
+
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: transparent !important; /* Сделан прозрачным, чтобы фон html был виден */
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        min-height: 100vh !important;
+        margin: 0 !important;
+    }
+
+    .login-container {
+        background-color: rgba(44, 44, 44, 0.7) !important; /* Полупрозрачный темный фон */
+        padding: 40px !important;
+        border-radius: 12px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important; /* Более темная тень */
+        text-align: center !important;
+        max-width: 400px !important;
+        width: 90% !important;
+        display: none; /* Изначально скрыто */
+    }
+
+    h1 {
+        color: #f0f0f0 !important; /* Светлый текст для заголовка */
+        margin-bottom: 30px !important;
+        font-size: 2em !important;
+    }
+
+    .telegram-login-button {
+        margin-top: 20px !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important; /* Кнопка на всю ширину контейнера */
+    }
+
+    /* Стилизация кнопки Telegram, если виджет позволяет */
+    .telegram-login-button > div {
+        /* display: inline-block; Убрано, так как родитель теперь flex */
+        transform: scale(1.5) !important; /* Увеличиваем кнопку в 1.5 раза */
+        transform-origin: center !important; /* Центр масштабирования */
+        width: 100% !important; /* Виджет на всю ширину родителя */
+        display: flex !important; /* Применить flexbox к виджету для центрирования его содержимого, если это возможно */
+        justify-content: center !important;
+        align-items: center !important;
+    }
+</style>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOMContentLoaded fired. Setting timeout for login container.');
+        setTimeout(function() {
+            const loginContainer = document.querySelector('.login-container');
+            if (loginContainer) {
+                loginContainer.style.display = 'flex';
+                console.log('Login container display set to flex.');
+            } else {
+                console.log('Login container not found after 5 seconds.');
+            }
+        }, 5000); // 5 секунд
+    });
+</script>

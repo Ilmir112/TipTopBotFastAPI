@@ -14,12 +14,17 @@
 
 {% block content %}
     <main>
-        <h1>Выберите рабочие дни</h1>
+        <h1>{{ title }}</h1>
+        <input type="hidden" id="userId" value="{{ user_id }}">
         <input type="text" id="datePicker" placeholder="Выберите даты" multiple>
 {#        <button id="submitDates">Добавить рабочие дни</button>#}
 
         <h2>Выбранные рабочие дни:</h2>
-        <ul id="selectedDatesList"></ul>
+        <ul id="selectedDatesList">
+            {% for day in work_days %}
+                <li>{{ day }}</li>
+            {% endfor %}
+        </ul>
     </main>
 
 
@@ -28,7 +33,7 @@
     <!-- Подключение локализации русского языка для flatpickr -->
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/ru.js"></script>
 
-    <script src="static/js/calendar.js" ></script>
+    <script src="/static/js/calendar.js" ></script>
 
 
 {% endblock %}
