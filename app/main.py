@@ -15,6 +15,7 @@ from sqladmin import Admin
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse, RedirectResponse
 from faststream.rabbit import RabbitBroker
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.admin.auth import authentication_backend
 from app.api.users.models import Users
@@ -135,11 +136,19 @@ async def setup_webhook(webhook_url):
         print(f"Ошибка при установке webhook: {e}")
 
 
+class CSPMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'self' https://oauth.telegram.org;"
+        return response
+
 app = FastAPI(lifespan=lifespan)
 try:
     app.mount("/static", StaticFiles(directory="app/static"), "static")
 except Exception as e:
     app.mount('/static', StaticFiles(directory='static'), 'static')
+
+app.add_middleware(CSPMiddleware)
 
 
 @app.post("/webhook")
