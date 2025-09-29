@@ -34,58 +34,58 @@
 
 <style>
     html {
-        height: 100% !important;
-        background-color: black !important; /* Черный фон */
-        background-image: url('\static\img\photo.jpg') !important; /* Фоновое изображение */
-        background-size: contain !important; /* Изображение полностью помещается в область */
-        background-position: center center !important; /* Центрировать изображение */
-        background-repeat: no-repeat !important; /* Не повторять изображение */
+        height: 100%;
+        background-color: black; /* Черный фон */
+        background-image: url('/static/img/photo.jpg'); /* Фоновое изображение */
+        background-size: contain; /* Изображение полностью помещается в область */
+        background-position: center center; /* Центрировать изображение */
+        background-repeat: no-repeat; /* Не повторять изображение */
     }
 
     body {
         font-family: 'Roboto', sans-serif;
-        background-color: transparent !important; /* Сделан прозрачным, чтобы фон html был виден */
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        min-height: 100vh !important;
-        margin: 0 !important;
+        background-color: transparent; /* Сделан прозрачным, чтобы фон html был виден */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        margin: 0;
     }
 
     .login-container {
-        background-color: rgba(44, 44, 44, 0.7) !important; /* Полупрозрачный темный фон */
-        padding: 40px !important;
-        border-radius: 12px !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important; /* Более темная тень */
-        text-align: center !important;
-        max-width: 400px !important;
-        width: 90% !important;
+        background-color: rgba(44, 44, 44, 0); /* Полностью прозрачный фон */
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); /* Более темная тень */
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
         display: none; /* Изначально скрыто */
     }
 
     h1 {
-        color: #f0f0f0 !important; /* Светлый текст для заголовка */
-        margin-bottom: 30px !important;
-        font-size: 2em !important;
+        color: #f0f0f0; /* Светлый текст для заголовка */
+        margin-bottom: 30px;
+        font-size: 2em;
     }
 
     .telegram-login-button {
-        margin-top: 20px !important;
-        display: flex !important;
-        justify-content: center !important;
-        align-items: center !important;
-        width: 100% !important; /* Кнопка на всю ширину контейнера */
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%; /* Кнопка на всю ширину контейнера */
     }
 
     /* Стилизация кнопки Telegram, если виджет позволяет */
     .telegram-login-button > div {
         /* display: inline-block; Убрано, так как родитель теперь flex */
-        transform: scale(1.5) !important; /* Увеличиваем кнопку в 1.5 раза */
-        transform-origin: center !important; /* Центр масштабирования */
-        width: 100% !important; /* Виджет на всю ширину родителя */
-        display: flex !important; /* Применить flexbox к виджету для центрирования его содержимого, если это возможно */
-        justify-content: center !important;
-        align-items: center !important;
+        transform: scale(1.5); /* Увеличиваем кнопку в 1.5 раза */
+        transform-origin: center; /* Центр масштабирования */
+        width: 100%; /* Виджет на всю ширину родителя */
+        display: flex; /* Применить flexbox к виджету для центрирования его содержимого, если это возможно */
+        justify-content: center;
+        align-items: center;
     }
 </style>
 
