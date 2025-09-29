@@ -139,7 +139,7 @@ async def setup_webhook(webhook_url):
 class CSPMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        response.headers["Content-Security-Policy"] = "frame-ancestors 'self' https://oauth.telegram.org;"
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'self' https://oauth.telegram.org; script-src 'self' https://telegram.org;"
         return response
 
 app = FastAPI(lifespan=lifespan)
