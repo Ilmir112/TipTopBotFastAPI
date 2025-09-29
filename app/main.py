@@ -139,7 +139,7 @@ async def setup_webhook(webhook_url):
 class CSPMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        response.headers["Content-Security-Policy"] = "frame-ancestors 'self' https://oauth.telegram.org; script-src 'self' https://telegram.org 'sha256-TXeOwgO99kuUXfgBB+E00FpgxfVaOAF7BuM2CX3oVkU=' 'sha256-9PVR5X/+S4/u3ffMRGqrgbyqOoN/Xs3Wh30Z4P/1K/M=' 'unsafe-eval';"
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'self' https://oauth.telegram.org https://zima-krs.ru https://www.zima-krs.ru; script-src 'self' https://telegram.org 'sha256-TXeOwgO99kuUXfgBB+E00FpgxfVaOAF7BuM2CX3oVkU=' 'sha256-9PVR5X/+S4/u3ffMRGqrgbyqOoN/Xs3Wh30Z4P/1K/M=' 'sha256-tMK0wDFL++Y9fp49G2niYbLgrkKjbAAJRkBS3//8bhE=' 'sha256-4L/tGoWw3BOQ1S4y56rixUZYoCTerEG7HcbpvFcLsWE=' 'sha256-kQtCoVp73UcysWIMblzMJbIhZstv+b5rCSnFLeAW86g=' 'unsafe-eval';"
         return response
 
 app = FastAPI(lifespan=lifespan)
