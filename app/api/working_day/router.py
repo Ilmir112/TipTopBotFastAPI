@@ -6,7 +6,6 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.applications.dao import ApplicationDAO
-from app.api.applications.router import get_booked_times
 from app.api.working_day.dao import WorkingDayDAO
 from app.api.working_day.schemas import WorkingDaysInput
 from app.bot.create_bot import bot

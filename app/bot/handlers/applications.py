@@ -14,7 +14,7 @@ from app.api.users.dao import UsersDAO
 from app.api.users.router import register_user
 from app.api.users.schemas import SUsers
 from app.api.working_day.dao import WorkingDayDAO
-from app.api.working_day.router import find_working_day_all
+
 from app.bot.create_bot import bot
 from app.bot.handlers.user_router import user_router
 from app.config import settings
@@ -132,7 +132,7 @@ async def service_chosen(callback_query: types.CallbackQuery, state: FSMContext)
         await state.update_data(service_id=service)
 
         # Запросить даты
-        dates = await find_working_day_all()
+        dates = await WorkingDayDAO.find_all()
 
         # Преобразовать даты в строки
         date_strings = [
