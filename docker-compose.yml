@@ -21,5 +21,5 @@ services:
 #      - db
       - redis
     ports:
-      - 80:8000
+      - 8443:8000
 
