@@ -137,47 +137,11 @@ async def setup_webhook(webhook_url):
 
 
 class CSPMiddleware(BaseHTTPMiddleware):
-    def __init__(
-            self,
-            app,
-            frame_ancestors: List[str] = None,
-            script_src: List[str] = None
-    ):
-        super().__init__(app)
-        self.csp_policy = self._build_csp_policy(frame_ancestors, script_src)
-
-    def _build_csp_policy(self, frame_ancestors, script_src):
-        # Значения по умолчанию
-        if frame_ancestors is None:
-            frame_ancestors = [
-                "'self'",
-                "https://zima-krs.ru:8443",
-                "https://127.0.0.1:8000",
-                "https://www.zima-krs.ru:8443",
-                "https://oauth.telegram.org"
-            ]
-
-        if script_src is None:
-            script_src = [
-                "'self'",
-                "https://telegram.org",
-                "'unsafe-inline'",
-                "'unsafe-eval'"
-            ]
-
-        return (
-            f"frame-ancestors {' '.join(frame_ancestors)}; "
-            f"script-src {' '.join(script_src)}; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data: https:; "
-            "connect-src 'self'; "
-            "default-src 'self'"
-        )
-
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        response.headers["Content-Security-Policy"] = self.csp_policy
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'self' https://zima-krs.ru https://www.zima-krs.ru https://oauth.telegram.org; script-src 'self' https://telegram.org 'unsafe-inline' 'unsafe-eval';"
         return response
+
 
 app = FastAPI(lifespan=lifespan)
 try:
@@ -185,7 +149,7 @@ try:
 except Exception as e:
     app.mount('/static', StaticFiles(directory='static'), 'static')
 
-app.add_middleware(CSPMiddleware)
+# app.add_middleware(CSPMiddleware)
 
 
 @app.post("/webhook")
@@ -228,9 +192,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.get("/", response_class=RedirectResponse, status_code=status.HTTP_302_FOUND)
 async def root(request: Request, current_user: Optional[Users] = Depends(get_optional_current_user)):
     if current_user:
-        return RedirectResponse(url="/pages/form", status_code=status.HTTP_302_FOUND)
+        return RedirectResponse(url="/form", status_code=status.HTTP_302_FOUND)
     else:
-        return RedirectResponse(url="/pages/telegram_login", status_code=status.HTTP_302_FOUND)
+        return RedirectResponse(url="/telegram_login", status_code=status.HTTP_302_FOUND)
 
 app.include_router(router_pages)
 # app.include_router(router_masters)
@@ -241,19 +205,19 @@ app.include_router(router_users)
 
 origins = ["http://localhost:3000"]
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS", "DELETE", "PATCH", "PUT"],
-    allow_headers=[
-        "Content-Type",
-        "Set-Cookie",
-        "Access-Control-Allow-Headers",
-        "Access-Control-Allow-Origin",
-        "Authorization",
-    ],
-)
+# app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=origins,
+#     allow_credentials=True,
+#     allow_methods=["GET", "POST", "OPTIONS", "DELETE", "PATCH", "PUT"],
+#     allow_headers=[
+#         "Content-Type",
+#         "Set-Cookie",
+#         "Access-Control-Allow-Headers",
+#         "Access-Control-Allow-Origin",
+#         "Authorization",
+#     ],
+# )
 
 
 @app.middleware("http")

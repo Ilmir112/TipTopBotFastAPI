@@ -50,12 +50,12 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // Проверяем, если текущий URL — это страница входа через Telegram
-            if (window.location.pathname === '/pages/telegram_login') {
+            if (window.location.pathname === '/telegram_login') {
                 const modal = document.getElementById('telegramLoginModal');
                 const modalContent = modal.querySelector('.modal-content');
 
                 // Загружаем содержимое страницы входа через AJAX
-                fetch('/pages/telegram_login')
+                fetch('/telegram_login')
                     .then(response => response.text())
                     .then(html => {
                         modalContent.innerHTML = html;

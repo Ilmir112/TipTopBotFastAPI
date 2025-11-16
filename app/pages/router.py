@@ -18,7 +18,7 @@ from app.logger import logger
 from app.api.users.dependencies import get_current_user
 import os
 
-router = APIRouter(prefix="/pages", tags=["Страницы"])
+router = APIRouter(tags=["Страницы"])
 templates = Jinja2Templates(directory=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "templates"))
 
 
@@ -65,21 +65,52 @@ async def get_base_page(request: Request):
 @router.get("/form", response_class=HTMLResponse)
 async def get_form_page(request: Request, current_user: Annotated[dict, Depends(get_current_user)]):
     work_days = await WorkingDayDAO.find_all()
-    working_days_formatted = [d.date.strftime("%Y-%m-%d") for d in work_days]
+    working_days_formatted = [d.date.strftime("%d.%m.%Y") for d in work_days]
     services = await ServiceDAO.find_all() # Получаем список услуг
     user_first_name = current_user.first_name # Получаем имя пользователя напрямую из объекта Users
     user_id = current_user.telegram_id # Получаем ID пользователя
-    return templates.TemplateResponse("form.html", {"request": request, "working_days": working_days_formatted, "services": services, "first_name": user_first_name, "user_id": user_id})
+    data_page = {
+                "request": request,
+                "user_id": user_id,
+                "first_name": user_first_name,
+                "title": "Запись на шиномонтаж",
+                # "masters": masters,
+                "services": services,
+                "working_days": working_days_formatted,
+            }
+    #
+    return templates.TemplateResponse("form.html",
+                                      data_page)
 
+# @router.get("/form", response_class=HTMLResponse)
+# async def read_root(request: Request, user_id: int = None, first_name: str = None):
+#     try:
+#         services = await ServiceDAO.find_all()
+#         working_days = await WorkingDayDAO.find_all()
+#         working_days = list(map(lambda x: x.date.strftime("%Y-%m-%d"), working_days))
+#
+#         data_page = {
+#             "request": request,
+#             "user_id": user_id,
+#             "first_name": first_name,
+#             "title": "Запись на шиномонтаж",
+#             # "masters": masters,
+#             "services": services,
+#             "working_days": working_days,
+#         }
+#
+#         return templates.TemplateResponse("form.html", data_page)
+#     except Exception as e:
+#         logger.error(e)
 
 @router.get("/calendar", response_class=HTMLResponse)
 async def get_calendar_page(request: Request):
     return templates.TemplateResponse("calendar.html", {"request": request})
 
 
-@router.get("/applications", response_class=HTMLResponse)
-async def get_applications_page(request: Request):
-    return templates.TemplateResponse("applications.html", {"request": request})
+# @router.get("/applications", response_class=HTMLResponse)
+# async def get_applications_page(request: Request):
+#     return templates.TemplateResponse("applications.html", {"request": request})
 
 
 @router.get("/admin/applications", response_class=HTMLResponse)
