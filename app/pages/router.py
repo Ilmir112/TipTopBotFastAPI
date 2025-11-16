@@ -94,8 +94,16 @@ async def get_telegram_login_page(request: Request):
 
 
 @router.get("/auth_telegram", response_class=HTMLResponse)
-async def get_auth_telegram_page(request: Request):
-    return templates.TemplateResponse("auth_telegram.html", {"request": request})
+async def get_auth_telegram_page(request: Request, next_path: str = "/"):
+    redirect_url = request.url_for("telegram_callback").replace("http://", "https://") + f"?next={next_path}"
+    return templates.TemplateResponse(
+        "auth_telegram.html",
+        {
+            "request": request,
+            "bot_id": settings.TELEGRAM_BOT_USERNAME,
+            "redirect_url": redirect_url
+        }
+    )
 
 
 @router.get("/work_days", response_class=HTMLResponse)
