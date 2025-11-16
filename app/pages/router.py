@@ -64,8 +64,8 @@ async def get_base_page(request: Request):
 
 @router.get("/form", response_class=HTMLResponse)
 async def get_form_page(request: Request, current_user: Annotated[dict, Depends(get_current_user)]):
-    work_days = await WorkingDayDAO.find_all()
-    working_days_formatted = [d.date.strftime("%d.%m.%Y") for d in work_days]
+    work_days = await WorkingDayDAO.find_all(start_date=datetime.now().date())
+    working_days_formatted = [d.date.strftime("%Y-%m-%d") for d in work_days]
     services = await ServiceDAO.find_all() # Получаем список услуг
     user_first_name = current_user.first_name # Получаем имя пользователя напрямую из объекта Users
     user_id = current_user.telegram_id # Получаем ID пользователя
@@ -81,27 +81,6 @@ async def get_form_page(request: Request, current_user: Annotated[dict, Depends(
     #
     return templates.TemplateResponse("form.html",
                                       data_page)
-
-# @router.get("/form", response_class=HTMLResponse)
-# async def read_root(request: Request, user_id: int = None, first_name: str = None):
-#     try:
-#         services = await ServiceDAO.find_all()
-#         working_days = await WorkingDayDAO.find_all()
-#         working_days = list(map(lambda x: x.date.strftime("%Y-%m-%d"), working_days))
-#
-#         data_page = {
-#             "request": request,
-#             "user_id": user_id,
-#             "first_name": first_name,
-#             "title": "Запись на шиномонтаж",
-#             # "masters": masters,
-#             "services": services,
-#             "working_days": working_days,
-#         }
-#
-#         return templates.TemplateResponse("form.html", data_page)
-#     except Exception as e:
-#         logger.error(e)
 
 @router.get("/calendar", response_class=HTMLResponse)
 async def get_calendar_page(request: Request):
@@ -132,8 +111,8 @@ async def get_auth_telegram_page(request: Request):
 async def read_work_days_root(request: Request, user_id: int):
     try:
         if user_id in settings.ADMIN_LIST:
-            work_days = await WorkingDayDAO.find_all(**{"date": datetime.now().date()})
-            working_days = list(map(lambda x: x.date.strftime("%Y-%m-%d"), work_days))
+            work_days = await WorkingDayDAO.find_all(start_date=datetime.now().date())
+            working_days = list(map(lambda x: x.date.strftime("%d-%m-%Y"), work_days))
             data_page = {
                 "request": request,
                 "user_id": user_id,

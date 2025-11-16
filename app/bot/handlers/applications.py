@@ -132,7 +132,7 @@ async def service_chosen(callback_query: types.CallbackQuery, state: FSMContext)
         await state.update_data(service_id=service)
 
         # Запросить даты
-        dates = await WorkingDayDAO.find_all()
+        dates = await WorkingDayDAO.find_all(start_date=date.today())
 
         # Преобразовать даты в строки
         date_strings = [

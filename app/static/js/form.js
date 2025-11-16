@@ -76,13 +76,54 @@ document.getElementById('appointmentForm').addEventListener('submit', function (
     const name = document.getElementById('name').value;
     const service = document.getElementById('service').options[document.getElementById('service').selectedIndex].text;
     const date = document.getElementById('date').value;
-    const time = document.getElementById('selectedTime').value;
-    console.log(time)
+    const appointment_time = document.getElementById('selectedTime').value;
 
-    const popupMessage = `${name}, вы планируете запись на услугу \n${service.toLowerCase()} \n${date} в ${time}.`;
-    document.getElementById('popupMessage').textContent = popupMessage;
+    console.log(appointment_time);
 
+    let popupMessage = '';
+
+    if (name.length < 2 || name.length > 50) {
+        popupMessage = "Имя должно быть от 2 до 50 символов.";
+        showPopup(popupMessage);
+        return;
+    }
+    if (service.length < 2 || service.length > 50) {
+        popupMessage = "Услуга должна быть от 2 до 50 символов.";
+        showPopup(popupMessage);
+        return;
+    }
+    if (!appointment_time) {
+        popupMessage = "Пожалуйста, выберите время услуги.";
+        showPopup(popupMessage);
+        return;
+    }
+    if (!date) {
+        popupMessage = "Пожалуйста, выберите дату услуги";
+        showPopup(popupMessage);
+        return;
+    }
+
+    // Если все проверки пройдены
+    popupMessage = `${name}, вы планируете запись на услугу \n${service.toLowerCase()} \n${date} в ${appointment_time}.`;
+    showPopup(popupMessage);
+});
+
+// Функция для показа попапа
+function showPopup(message) {
+    document.getElementById('popupMessage').textContent = message;
     document.getElementById('popup').style.display = 'flex';
+}
+
+// Закрытие попапа при клике на крестик
+document.querySelector('.close-popup').addEventListener('click', function() {
+    document.getElementById('popup').style.display = 'none';
+});
+
+// Дополнительно: закрытие попапа при клике вне его области
+document.getElementById('popup').addEventListener('click', function(e) {
+    if (e.target.id === 'popup') {
+        document.getElementById('popup').style.display = 'none';
+    }
 });
 
 // Анимация появления элементов при загрузке страницы
@@ -176,6 +217,10 @@ document.getElementById('closePopup').addEventListener('click', async function (
     }
     if (!appointment_time) {
         alert("Пожалуйста, выберите время услуги.");
+        return;
+    }
+    if (!date) {
+        alert("Пожалуйста, выберите дату услуги")
         return;
     }
 
