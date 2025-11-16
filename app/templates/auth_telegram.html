@@ -5,7 +5,9 @@
         <h1>Please log in</h1>
         <p class="paragraph">Only selected users may see this&nbsp;site.</p>
 
-        <a href="https://oauth.telegram.org/auth?bot_id={{ bot_id }}&redirect_url={{ redirect_url }}" class="telegram-login-button">Войти через Telegram</a>
+        <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-login="tip_topBot"
+                data-size="large" data-auth-url="/auth/telegram-callback?next={{ next_path }}"
+                data-request-access="write"></script>
     </div>
 </div>
 </body>
