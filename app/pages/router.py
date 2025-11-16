@@ -1,5 +1,5 @@
 import hmac
-from datetime import date
+from datetime import date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Query, Depends
@@ -102,7 +102,7 @@ async def get_auth_telegram_page(request: Request):
 async def read_work_days_root(request: Request, user_id: int):
     try:
         if user_id in settings.ADMIN_LIST:
-            work_days = await WorkingDayDAO.find_all()
+            work_days = await WorkingDayDAO.find_all(**{"date": datetime.now().date()})
             working_days = list(map(lambda x: x.date.strftime("%Y-%m-%d"), work_days))
             data_page = {
                 "request": request,

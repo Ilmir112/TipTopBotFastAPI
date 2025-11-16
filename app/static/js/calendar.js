@@ -9,6 +9,8 @@ const datePicker = flatpickr("#datePicker", {
     dateFormat: "Y-m-d",
     locale: "ru",
     minDate: "today",
+    appendTo: document.body, // Добавлена опция для добавления календаря к body
+    position: "auto", // Оставляем автоматическое позиционирование
     onChange: function (selectedDates, dateStr, instance) {
         console.log("Обновленный список выбранных дат:");
         selectedDates.forEach(async (date) => {

@@ -48,7 +48,11 @@ h1 {
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
     border-radius: 8px;
     border: none;
-    z-index: 9999; /* Добавлено для отображения поверх других элементов */
+    z-index: 9999 !important; /* Добавлено для отображения поверх других элементов */
+    position: fixed !important; /* Фиксированное позиционирование относительно окна просмотра */
+    top: 50% !important; /* Центрирование по вертикали */
+    left: 50% !important; /* Центрирование по горизонтали */
+    transform: translate(-50%, -50%) !important; /* Корректировка для точного центрирования */
 }
 
 .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange, .flatpickr-day.selected:focus, .flatpickr-day.startRange:focus, .flatpickr-day.endRange:focus, .flatpickr-day.selected:hover, .flatpickr-day.startRange:hover, .flatpickr-day.endRange:hover, .flatpickr-day.selected.prevMonth, .flatpickr-day.startRange.prevMonth, .flatpickr-day.endRange.prevMonth, .flatpickr-day.selected.nextMonth, .flatpickr-day.startRange.nextMonth, .flatpickr-day.endRange.nextMonth {

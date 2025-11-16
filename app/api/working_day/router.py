@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.applications.dao import ApplicationDAO
+
 from app.api.working_day.dao import WorkingDayDAO
 from app.api.working_day.schemas import WorkingDaysInput
 from app.bot.create_bot import bot
@@ -113,8 +114,7 @@ async def add_working_day(request: Request, working_day: WorkingDaysInput):
             status_code=500, content={"detail": "Внутренняя ошибка сервера"}
         )
 
-
-@router.get("find_id")
+@router.get("/find_id")
 async def find_id_day(working_day: date = Query(...)):
     try:
         working_day_id = await WorkingDayDAO.find_one_or_none(working_day=working_day)

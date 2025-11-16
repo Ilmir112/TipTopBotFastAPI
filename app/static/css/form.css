@@ -219,3 +219,11 @@ h1 {
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
     text-align: center;
 }
+
+.flatpickr-calendar {
+    z-index: 9999 !important; /* Добавлено для отображения поверх других элементов */
+    position: fixed !important; /* Фиксированное позиционирование относительно окна просмотра */
+    top: 50% !important; /* Центрирование по вертикали */
+    left: 50% !important; /* Центрирование по горизонтали */
+    transform: translate(-50%, -50%) !important; /* Корректировка для точного центрирования */
+}
