@@ -89,7 +89,6 @@ async def get_admin_applications_page(request: Request):
 
 @router.get("/telegram_login", response_class=HTMLResponse)
 async def get_telegram_login_page(request: Request):
-    # Возвращаем только HTML-содержимое для вставки в модальное окно
     return templates.TemplateResponse("login_telegram.html", {"request": request, "bot_username": settings.TELEGRAM_BOT_USERNAME})
 
 
