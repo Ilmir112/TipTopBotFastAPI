@@ -115,8 +115,8 @@ async def login_via_telegram(telegram_id: int): # Изменена сигнат�
 async def get_optional_current_user(request: Request) -> Optional[Users]: # Добавил request: Request
     logging.info("Attempting to get optional current user...")
     try:
-        if request.query_params.get('telegram_id'):
-            telegram_id = request.query_params.get('telegram_id')
+        if request.query_params.get('user_id'):
+            telegram_id = request.query_params.get('user_id')
         # Поскольку get_token может вызывать исключения, мы должны обрабатывать их здесь.
         token = await get_token(request=request, authorization=request.headers.get("Authorization"), telegram_id=telegram_id)
         logging.info(f"get_optional_current_user: Token obtained: {token[:10]}...")
