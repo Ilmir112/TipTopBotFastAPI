@@ -97,7 +97,7 @@ async def process_name(message: Message, state: FSMContext):
     new_user = await UsersDAO.find_one_or_none(telephone_number=telephone_number)
     if not new_user:
         new_user_data = SUsers(
-            first_name=name, username="", telephone_number=telephone_number
+            first_name=name, username=name, telephone_number=telephone_number
         )
 
         new_user = await register_user(new_user_data)
