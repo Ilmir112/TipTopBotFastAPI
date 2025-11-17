@@ -18,12 +18,11 @@ from app.exceptions import (
 )
 
 
-
 async def get_token(
-    request: Request,
-    authorization: Optional[str] = Header(None),
-    token: Optional[str] = None,  # Добавляем параметр запроса для токена
-    telegram_id: Optional[int] = None # Добавляем параметр запроса для telegram_id
+        request: Request,
+        authorization: Optional[str] = Header(None),
+        token: Optional[str] = None,
+        telegram_id: Optional[int] = None
 ):
     logging.info("Attempting to get token...")
 
@@ -34,7 +33,7 @@ async def get_token(
 
     # Попытка получить токен из заголовка Authorization
     if authorization and authorization.startswith("Bearer "):
-        token_from_header = authorization[len("Bearer ") :]
+        token_from_header = authorization[len("Bearer "):]
         logging.info(f"Token found in Authorization header: {token_from_header[:10]}...")
         return token_from_header
 
@@ -44,23 +43,48 @@ async def get_token(
         logging.info(f"Token found in cookie '{settings.COOKIE_NAME}': {token_from_cookie[:10]}...")
         return token_from_cookie
 
-    # Если токена нет, но есть telegram_id, генерируем токен
+    # Получаем telegram_id из разных возможных параметров
+    telegram_id = None
 
-    if request.query_params.get("user_id"):
+    # Пробуем получить из query параметра telegram_id
+    if request.query_params.get("telegram_id"):
+        telegram_id = request.query_params.get("telegram_id")
+        logging.info(f"Telegram ID found in query parameter 'telegram_id': {telegram_id}")
+
+    # Пробуем получить из query параметра user_id (для Telegram Mini Apps)
+    elif request.query_params.get("user_id"):
         telegram_id = request.query_params.get("user_id")
-        logging.info(f"Telegram ID found in query parameter: {telegram_id}. Attempting to generate token.")
-        user = await UsersDAO.find_one_or_none(telegram_id=int(telegram_id))
-        if user:
-            access_token = create_access_token({"sub": str(user.telegram_id)})
-            logging.info(f"Token generated for telegram_id {telegram_id}: {access_token[:10]}...")
-            return access_token
-        else:
-            logging.warning(f"User with telegram_id {telegram_id} not found. Cannot generate token.")
-            raise UnauthorizedException("User not found for provided telegram_id")
+        logging.info(f"Telegram ID found in query parameter 'user_id': {telegram_id}")
 
-    logging.warning("No token found in header, cookies, or query parameters. No telegram_id provided. Raising TokenAbsentException.")
-    raise TokenAbsentException # Если токен не найден нигде и telegram_id не предоставлен
+    # Пробуем получить из тела запроса, если это POST
+    elif await request.body():
+        try:
+            body = await request.json()
+            telegram_id = body.get("telegram_id") or body.get("user_id")
+            if telegram_id:
+                logging.info(f"Telegram ID found in request body: {telegram_id}")
+        except:
+            pass
 
+    # Если нашли telegram_id, генерируем токен
+    if telegram_id:
+        logging.info(f"Telegram ID found: {telegram_id}. Attempting to generate token.")
+        try:
+            user = await UsersDAO.find_one_or_none(telegram_id=int(telegram_id))
+            if user:
+                access_token = create_access_token({"sub": str(user.telegram_id)})
+                logging.info(f"Token generated for telegram_id {telegram_id}: {access_token[:10]}...")
+                return access_token
+            else:
+                logging.warning(f"User with telegram_id {telegram_id} not found. Cannot generate token.")
+                raise UnauthorizedException("User not found for provided telegram_id")
+        except ValueError:
+            logging.warning(f"Invalid telegram_id format: {telegram_id}")
+            raise UnauthorizedException("Invalid telegram_id format")
+
+    logging.warning(
+        "No token found in header, cookies, or query parameters. No telegram_id provided. Raising TokenAbsentException.")
+    raise TokenAbsentException
 
 async def get_current_user(token: str = Depends(get_token)):
     logging.info("Attempting to get current user...")
