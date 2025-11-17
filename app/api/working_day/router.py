@@ -70,6 +70,22 @@ async def find_applications_by_date(working_day: date):
     except Exception as e:
         logger.error(f"Unexpected error in find_working_by_date: {e}", exc_info=True)
 
+@router.get("/find_all")
+async def work_days(request: Request):
+    try:
+        work_days = await WorkingDayDAO.find_all(start_date=datetime.now().date())
+
+        return work_days
+    except SQLAlchemyError as e:
+        logger.error(f"Database error in find_work_days: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500, content={"detail": "Ошибка базы данных"}
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error in find_work_days: {e}", exc_info=True)
+        return JSONResponse(
+            status_code=500, content={"detail": "Внутренняя ошибка сервера"}
+        )
 
 @router.post("/add")
 async def add_working_day(request: Request, working_day: WorkingDaysInput):

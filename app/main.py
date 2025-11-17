@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import ssl
 from contextlib import asynccontextmanager
 from datetime import date, timedelta
 from typing import Optional, List
@@ -8,6 +9,7 @@ import aiogram
 from aiogram.exceptions import  TelegramRetryAfter
 import uvicorn
 from aiogram.types import Update
+from aiohttp import ClientSession, TCPConnector
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, Request, status, Depends, HTTPException
 from fastapi.exceptions import RequestValidationError
@@ -118,14 +120,33 @@ async def lifespan(app: FastAPI):
     #         print("Потребитель остановлен")
     print("Завершение работы приложения")
 
+async def verify_webhook_ssl(webhook_url: str):
+    """Проверяет SSL для webhook URL"""
+    try:
+        async with ClientSession(connector=TCPConnector(verify_ssl=True)) as session:
+            async with session.get(webhook_url) as response:
+                if response.status == 200:
+                    print("✅ SSL сертификат валиден")
+                    return True
+                else:
+                    print(f"⚠️  HTTP статус: {response.status}")
+                    return False
+    except ssl.SSLCertVerificationError as e:
+        print(f"❌ Ошибка SSL верификации: {e}")
+        return False
+    except Exception as e:
+        print(f"❌ Ошибка: {e}")
+        return False
+
 
 async def setup_webhook(webhook_url):
     try:
         # Проверяем текущий статус webhook
         info = await bot.get_webhook_info()
         if info.url != webhook_url:
-            print(webhook_url)
+
             await bot.set_webhook(url=webhook_url)
+            await verify_webhook_ssl("https://zima-krs.ru/webhook")
 
         else:
             print("Webhook уже установлен.")
@@ -156,11 +177,11 @@ except Exception as e:
 
 @app.post("/webhook")
 async def webhook(request: Request) -> None:
-    # body = await request.body()
-    # logger.info(f"Received webhook request: {body}")
+    body = await request.body()
+    logger.info(f"Received webhook request: {body}")
     update = Update.model_validate(await request.json(), context={"bot": bot})
 
-    await dp.feed_update(bot, update)
+    await dp.feed_webhook_update(bot, update)
     logger.info("Update processed")
 
 
