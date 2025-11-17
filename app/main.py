@@ -5,6 +5,7 @@ from datetime import date, timedelta
 from typing import Optional, List
 
 import aiogram
+from aiogram.exceptions import  TelegramRetryAfter
 import uvicorn
 from aiogram.types import Update
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -123,11 +124,12 @@ async def setup_webhook(webhook_url):
         # Проверяем текущий статус webhook
         info = await bot.get_webhook_info()
         if info.url != webhook_url:
+            print(webhook_url)
             await bot.set_webhook(url=webhook_url)
 
         else:
             print("Webhook уже установлен.")
-    except aiogram.exceptions.TelegramRetryAfter as e:
+    except  TelegramRetryAfter as e:
         wait_time = int(e.retry_after)
         print(f"Превышен лимит запросов. Повтор через {wait_time} секунд.")
         await asyncio.sleep(wait_time)
