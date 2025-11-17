@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, date
 
 from aiogram import types
 from aiogram.filters import StateFilter
@@ -49,7 +49,7 @@ def validate_phone_number(phone: str) -> bool:
 
 
 @user_router.message(StateFilter(BookingStates.waiting_for_telephone_number))
-async def process_name(message: Message, state: FSMContext):
+async def process_telephone_number(message: Message, state: FSMContext):
     phone = message.text.strip()
 
     # Проверка валидности номера телефона
@@ -87,21 +87,21 @@ async def process_name(message: Message, state: FSMContext):
 
 
 @user_router.message(StateFilter(BookingStates.waiting_for_name))
-async def process_telephone_number(message: Message, state: FSMContext):
+async def process_name(message: Message, state: FSMContext):
     # Сохраняем номер телефона и запрашиваем услугу
     await state.update_data(name=message.text)
     name = message.text
     user_data = await state.get_data()
 
     telephone_number = user_data.get("telephone_number")
+    new_user = await UsersDAO.find_one_or_none(telephone_number=telephone_number)
+    if not new_user:
+        new_user_data = SUsers(
+            first_name=name, username="", telephone_number=telephone_number
+        )
 
-    new_user_data = SUsers(
-        first_name=name, username=telephone_number, telephone_number=telephone_number
-    )
+        new_user = await register_user(new_user_data)
 
-    new_user = await register_user(new_user_data)
-    if new_user is None:
-        return
     user_id = new_user.telegram_id
     await state.update_data(user_id=user_id)
 
@@ -121,7 +121,7 @@ async def process_telephone_number(message: Message, state: FSMContext):
     # Создаем клавиатуру
     keyboard = InlineKeyboardMarkup(inline_keyboard=rows)
     await message.answer("Пожалуйста, выберите услугу:", reply_markup=keyboard)
-    await state.set_state(BookingStates.waiting_for_name)
+    await state.set_state(BookingStates.waiting_for_service)
 
 
 @user_router.callback_query(lambda c: c.data.startswith("service_"))
@@ -136,9 +136,9 @@ async def service_chosen(callback_query: types.CallbackQuery, state: FSMContext)
 
         # Преобразовать даты в строки
         date_strings = [
-            date.strftime("%d.%m.%Y")
-            for date in sorted(dates)
-            if date >= datetime.now().date()
+            working_day_obj.date.strftime("%d.%m.%Y")
+            for working_day_obj in sorted(dates, key=lambda x: x.date)
+            if working_day_obj.date >= datetime.now().date()
         ]
 
         # Создаем список списков кнопок
