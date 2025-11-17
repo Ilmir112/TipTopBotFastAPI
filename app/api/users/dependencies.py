@@ -45,6 +45,7 @@ async def get_token(
 
     # Получаем telegram_id из разных возможных параметров
     telegram_id = None
+    print(request.query_params)
 
     # Пробуем получить из query параметра telegram_id
     if request.query_params.get("telegram_id"):
