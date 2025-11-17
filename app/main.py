@@ -39,7 +39,6 @@ from app.config import settings, router_broker
 from app.database import engine
 from app.logger import logger
 from app.pages.router import router as router_pages
-from app.rabbit.consumer import start_consumer
 from app.api.users.dependencies import get_current_user, get_optional_current_user
 from app.exceptions import TokenAbsentException, UnauthorizedException
 
@@ -172,7 +171,7 @@ try:
 except Exception as e:
     app.mount('/static', StaticFiles(directory='static'), 'static')
 
-# app.add_middleware(CSPMiddleware)
+app.add_middleware(CSPMiddleware)
 
 
 @app.post("/webhook")
