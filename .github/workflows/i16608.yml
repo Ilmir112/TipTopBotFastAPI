@@ -1,0 +1,7 @@
+name: i16608
+on: [push]
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "hello i16608"
